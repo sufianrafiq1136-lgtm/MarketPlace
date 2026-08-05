@@ -19,7 +19,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Categories
+    // AJAX endpoint (must come first)
+    Route::get('/categories/data', [CategoryController::class, 'data'])
+        ->name('categories.data');
+
+    // Resource routes
     Route::resource('categories', CategoryController::class);
 });
 
