@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // This table stores the reusable categories assigned to marketplace ads.
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -22,6 +23,7 @@ return new class extends Migration
     
     public function down(): void
     {
+        // Roll back this migration by removing the categories table.
         Schema::dropIfExists('categories');
     }
 };
