@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tableBody.innerHTML = '<tr><td colspan="5" class="px-5 py-12 text-center text-sm text-gray-500">No categories found.</td></tr>';
                 return;
             }
-
+ 
             tableBody.innerHTML = categories.map((category, index) => `
                 <tr data-category="${`${category.name} ${category.slug}`.toLowerCase()}" class="transition hover:bg-gray-50">
                     <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-500">${index + 1}</td>
@@ -38,8 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-500"><span class="rounded-md bg-gray-100 px-2.5 py-1 font-mono text-xs">${category.slug}</span></td>
                     <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-500">${category.created_at ?? '—'}</td>
                     <td class="whitespace-nowrap px-5 py-4 text-right">
-                        <button type="button" class="mr-2 rounded-md px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50">Edit</button>
-                        <button type="button" class="rounded-md px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50">Delete</button>
+                        <button type="button" class="mr-2 rounded-md px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50"> Edit</button>
+                        <button type="button" class="rounded-md px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"> Delete</button>
                     </td>
                 </tr>`).join('');
         })
