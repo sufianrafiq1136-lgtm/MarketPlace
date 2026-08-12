@@ -10,11 +10,19 @@ class Ad extends Model
         'user_id',
         'category_id',
         'title',
+        'slug',
         'description',
         'price',
+        'condition',
+        'city',
+        'status',
     ];
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 }

@@ -1,105 +1,444 @@
-// Category-page behavior is loaded after the document is ready.
+// ======================================
+// Category Module
+// ======================================
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Find the category-page elements. The JavaScript bundle is shared by all pages,
-    // so we stop here when the current page does not contain the category table.
-    const tableBody = document.getElementById('categoryTableBody');
-    const categoryCount = document.getElementById('categoryCount');
-    const searchInput = document.getElementById('search');
+
+    init();
+
+});
+
+// ======================================
+// Global Elements
+// ======================================
+
+let tableBody;
+let categoryCount;
+let searchInput;
+
+let modal;
+let form;
+
+let nameInput;
+let slugInput;
+
+let formError;
+
+let btnAddCategory;
+let btnSaveCategory;
+
+// Used later for Update
+let editingCategoryId = null;
+function init() {
+    console.log('init called');
+    tableBody = document.getElementById('categoryTableBody');
 
     if (!tableBody) return;
 
-    // Ask Laravel for the category list. The browser automatically sends the current
-    // login session because this is a same-origin request.
-    fetch('/categories/data', {
-        headers: { Accept: 'application/json' },
+    categoryCount = document.getElementById('categoryCount');
+    searchInput = document.getElementById('search');
+
+    modal = document.getElementById('categoryModal');
+
+    form = document.getElementById('categoryForm');
+
+    nameInput = document.getElementById('categoryName');
+    slugInput = document.getElementById('categorySlug');
+
+    formError = document.getElementById('categoryFormError');
+
+    btnAddCategory = document.getElementById('btnAddCategory');
+    btnSaveCategory = document.getElementById('btnSaveCategory');
+
+    attachEvents();
+
+    loadCategories();
+
+}
+async function requestJson(url, options = {}) {
+
+    const response = await fetch(url, {
         credentials: 'same-origin',
-    })
-        .then((response) => {
-            // An unauthenticated request is redirected to the login page instead of returning JSON.
-            if (!response.ok || response.redirected) {
-                throw new Error('Please log in before viewing categories.');
-            }
-            return response.json();
-        })
-        .then((result) => {
-            // The API returns its records inside the data property.
-            const categories = result.data ?? [];
-            if (categoryCount) categoryCount.textContent = categories.length;
 
-            if (!categories.length) {
-                tableBody.innerHTML = '<tr><td colspan="5" class="px-5 py-12 text-center text-sm text-gray-500">No categories found.</td></tr>';
-                return;
-            }
- 
-            tableBody.innerHTML = categories.map((category, index) => `
-                <tr data-category="${`${category.name} ${category.slug}`.toLowerCase()}" class="transition hover:bg-gray-50">
-                    <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-500">${index + 1}</td>
-                    <td class="whitespace-nowrap px-5 py-4 text-sm font-semibold text-gray-900">${category.name}</td>
-                    <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-500"><span class="rounded-md bg-gray-100 px-2.5 py-1 font-mono text-xs">${category.slug}</span></td>
-                    <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-500">${category.created_at ?? '—'}</td>
-                    <td class="whitespace-nowrap px-5 py-4 text-right">
-                        <button type="button" class="mr-2 rounded-md px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50"> Edit</button>
-                        <button type="button" class="rounded-md px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"> Delete</button>
-                    </td>
-                </tr>`).join('');
-        })
-        .catch((error) => {
-            tableBody.innerHTML = `<tr><td colspan="5" class="px-5 py-12 text-center text-sm text-red-600">${error.message}</td></tr>`;
-        });
+        headers: {
+            Accept: 'application/json',
+            ...(options.headers || {})
+        },
 
-    // Filter already-rendered rows as the user types in the search box.
-    searchInput?.addEventListener('input', (event) => {
-        const query = event.target.value.toLowerCase().trim();
-        tableBody.querySelectorAll('tr[data-category]').forEach((row) => {
-            row.classList.toggle('hidden', !row.dataset.category.includes(query));
-        });
+        ...options
     });
 
-    const modal = document.getElementById('categoryModal');
-    const form = document.getElementById('categoryForm');
-    const nameInput = document.getElementById('categoryName');
-    const slugInput = document.getElementById('categorySlug');
-    const formError = document.getElementById('categoryFormError');
-    // The modal is hidden by default. These handlers open and close it without a page reload.
-    const closeModal = () => modal?.classList.add('hidden');
+    const result = await response.json();
 
-    document.getElementById('btnAddCategory')?.addEventListener('click', () => {
-        modal?.classList.remove('hidden');
-        nameInput?.focus();
+    if (!response.ok || result.success === false) {
+
+        throw result;
+
+    }
+
+    return result;
+
+}
+async function loadCategories() {
+
+    try {
+
+        const result = await requestJson('/categories/data');
+
+        renderCategories(result.data);
+
+    } catch (error) {
+
+        showTableError(error.message || 'Unable to load categories.');
+
+    }
+
+}
+function showTableError(message) {
+
+    tableBody.innerHTML = `
+
+        <tr>
+
+            <td colspan="5"
+                class="px-5 py-12 text-center text-red-600">
+
+                ${message}
+
+            </td>
+
+        </tr>
+
+    `;
+
+}
+function renderCategories(categories) {
+
+    if (categoryCount) {
+        categoryCount.textContent = categories.length;
+    }
+
+    if (!categories.length) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5"
+                    class="px-5 py-12 text-center">
+                    No categories found.
+                </td>
+            </tr>
+
+        `;
+        return;
+    }
+
+    let html = '';
+
+    categories.forEach((category, index) => {
+        html += `
+            <tr
+                data-category="${category.name.toLowerCase()} ${category.slug.toLowerCase()}">
+                <td>${index + 1}</td>
+                <td>${category.name}</td>
+                <td>${category.slug}</td>
+                <td>
+                    ${new Date(category.created_at).toLocaleDateString()}
+                </td>
+                <td>
+                    <button
+                        class="edit-btn"
+                        data-id="${category.id}">
+                        Edit
+                    </button>
+                    <button
+                        class="delete-btn"
+                        data-id="${category.id}">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        `;
     });
-    document.getElementById('btnCloseCategoryModal')?.addEventListener('click', closeModal);
-    document.getElementById('btnCancelCategory')?.addEventListener('click', closeModal);
-    document.getElementById('categoryModalBackdrop')?.addEventListener('click', closeModal);
+    tableBody.innerHTML = html;
+}
+function openModal() {
 
-    // Submit the modal form as JSON to the Laravel store route.
-    form?.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        formError?.classList.add('hidden');
+    modal.classList.remove('hidden');
 
-        try {
-            const response = await fetch('/categories', {
-                method: 'POST',
+    nameInput.focus();
+
+}
+function closeModal() {
+
+    modal.classList.add('hidden');
+
+}
+function resetForm() {
+
+    form.reset();
+
+    formError.classList.add('hidden');
+
+    formError.textContent = '';
+
+    editingCategoryId = null;
+
+    btnSaveCategory.textContent = 'Save Category';
+
+}   
+
+// ======================================
+// Edit Category
+// ======================================
+
+async function editCategory(id) {
+
+    try {
+
+        const result = await requestJson(`/categories/${id}`);
+
+        const category = result.data;
+
+        editingCategoryId = category.id;
+
+        nameInput.value = category.name;
+
+        slugInput.value = category.slug;
+
+        btnSaveCategory.textContent = 'Update Category';
+
+        openModal();
+
+    } catch (error) {
+
+        alert(error.message || 'Unable to load category.');
+
+    }
+
+}
+// ======================================
+// Update Category
+// ======================================
+
+async function updateCategory() {
+
+    const data = {
+        name: nameInput.value.trim(),
+        slug: slugInput.value.trim()
+    };
+
+    try {
+
+        const result = await requestJson(
+            `/categories/${editingCategoryId}`,
+            {
+                method: 'PUT',
+
                 headers: {
-                    'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                    'X-CSRF-TOKEN': getCsrfToken()
                 },
-                credentials: 'same-origin',
-                body: JSON.stringify({ name: nameInput.value }),
-            });
 
-            if (!response.ok) {
-                const result = await response.json();
-                throw new Error(result.message || 'Unable to create category.');
+                body: JSON.stringify(data)
+            }
+        );
+
+        closeModal();
+
+        resetForm();
+
+        await loadCategories();
+
+        console.log(result.data);
+
+    } catch (error) {
+
+        showFormError(error);
+
+    }
+
+}
+
+// ======================================
+// Delete Category
+// ======================================
+
+async function deleteCategory(id) {
+
+    const confirmed = confirm(
+        'Are you sure you want to delete this category?'
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+
+        await requestJson(`/categories/${id}`, {
+
+            method: 'DELETE',
+
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken()
             }
 
-            // Reload the page so the newly saved category appears in the table and count.
-            window.location.reload();
-        } catch (error) {
-            if (formError) {
-                formError.textContent = error.message;
-                formError.classList.remove('hidden');
-            }
+        });
+
+        // Refresh table without reloading the page
+        await loadCategories();
+
+    } catch (error) {
+
+        alert(
+            error.message || 'Unable to delete category.'
+        );
+
+    }
+
+}
+// ======================================
+// Create Category
+// ======================================
+
+async function createCategory() {
+
+    const data = {
+        name: nameInput.value.trim(),
+        slug: slugInput.value.trim()
+    };
+    try {
+        const result = await requestJson('/categories', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': getCsrfToken()
+            },
+
+            body: JSON.stringify(data)
+        });
+
+        // Category created successfully
+        closeModal();
+
+        resetForm();
+
+        // Reload table without refreshing the page
+        await loadCategories();
+        console.log(result.data);
+
+    } catch (error) {
+
+        showFormError(error);
+
+    }
+
+}
+// ======================================
+// CSRF Token
+// ======================================
+
+function getCsrfToken() {
+
+    return document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content');
+
+}
+// ======================================
+// Form Errors
+// ====================================== 
+function showFormError(error) {
+
+    let message = 'Something went wrong.';
+
+    if (error.errors) {
+
+        const firstField = Object.keys(error.errors)[0];
+
+        message = error.errors[firstField][0];
+
+    } else if (error.message) {
+
+        message = error.message;
+
+    }
+
+    formError.textContent = message;
+
+    formError.classList.remove('hidden');
+
+}
+function searchCategories(query) {
+
+    tableBody
+        .querySelectorAll('tr[data-category]')
+        .forEach(row => {
+
+            row.classList.toggle(
+                'hidden',
+                !row.dataset.category.includes(query)
+            );
+
+        });
+
+}
+function attachEvents() {
+    console.log('btnAddCategory', btnAddCategory);
+    btnAddCategory.addEventListener('click', () => {
+        resetForm();
+
+        openModal();
+
+    });
+
+    document
+        .getElementById('btnCancelCategory')
+        ?.addEventListener('click', closeModal);
+
+    document
+        .getElementById('btnCloseCategoryModal')
+        ?.addEventListener('click', closeModal);
+
+    document
+        .getElementById('categoryModalBackdrop')
+        ?.addEventListener('click', closeModal);
+
+    form?.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        if (editingCategoryId) {
+            updateCategory();
+            return;
+        }
+
+        createCategory();
+    });
+
+    tableBody.addEventListener('click', (event) => {
+        const editButton = event.target.closest('.edit-btn');
+        if (editButton) {
+            const id = editButton.dataset.id;
+            editCategory(id);
+            return;
         }
     });
-});
+    tableBody.addEventListener('click', (event) => {
+        const deleteButton = event.target.closest('.delete-btn');
+        if (deleteButton) {
+            const id = deleteButton.dataset.id;
+            deleteCategory(id);
+            return;
+        }
+    });
+
+    searchInput?.addEventListener('input', e => {
+
+        searchCategories(
+            e.target.value
+                .toLowerCase()
+                .trim()
+        );
+
+    });
+
+}

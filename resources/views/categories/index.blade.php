@@ -1,3 +1,5 @@
+
+
 <x-app-layout>
     {{-- The header slot is rendered by the shared authenticated layout. --}}
     <x-slot name="header">
