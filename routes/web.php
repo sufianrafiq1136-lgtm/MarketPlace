@@ -1,5 +1,5 @@
 <?php
-
+use App\Http\Controllers\AdController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Ads
 
     // AJAX endpoint used by the categories table to fetch records without reloading the page.
     Route::get('/categories/data', [CategoryController::class, 'data'])
@@ -30,5 +31,7 @@ Route::middleware('auth')->group(function () {
     // Resource routes create the standard index, create, store, edit, update, and delete URLs.
     Route::resource('categories', CategoryController::class);
 });
+Route::get('/ads/data', [AdController::class, 'data'])->name('ads.data');
+Route::get('/ads', [AdController::class, 'index'])->name('ads.index');
 
 require __DIR__.'/auth.php';

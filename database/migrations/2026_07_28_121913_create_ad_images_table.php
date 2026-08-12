@@ -17,7 +17,7 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
 
-            $table->string('image');
+            $table->string('image_path');
 
             $table->timestamps();
         });
