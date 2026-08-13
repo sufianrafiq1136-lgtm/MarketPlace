@@ -22,8 +22,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
     // Ads
-
+    Route::post('/ads', [AdController::class, 'store'])->name('ads.store');
+    Route::put('/ads/{ad}', [AdController::class, 'update'])->name('ads.update');
+    Route::delete('/ads/{ad}', [AdController::class, 'destroy'])->name('ads.destroy');
+    
     // AJAX endpoint used by the categories table to fetch records without reloading the page.
     Route::get('/categories/data', [CategoryController::class, 'data'])
         ->name('categories.data');
@@ -33,5 +37,6 @@ Route::middleware('auth')->group(function () {
 });
 Route::get('/ads/data', [AdController::class, 'data'])->name('ads.data');
 Route::get('/ads', [AdController::class, 'index'])->name('ads.index');
+Route::get('/ads/{ad}', [AdController::class, 'show'])  ->name('ads.show');
 
 require __DIR__.'/auth.php';

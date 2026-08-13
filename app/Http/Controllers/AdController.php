@@ -17,6 +17,16 @@ class AdController extends Controller
         return view('ads.index');
     }
 
+    public function data(): JsonResponse
+    {
+        $ads = Ad::with('category')->latest()->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $ads,
+            'errors' => null,
+        ]);
+    }
     /**
      * Show the form for creating a new resource.
      */
