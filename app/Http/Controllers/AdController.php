@@ -19,7 +19,7 @@ class AdController extends Controller
 
     public function data(): JsonResponse
     {
-        $ads = Ad::with('category')->latest()->get();
+        $ads = Ad::with('category', 'user', 'images')->latest()->get();
 
         return response()->json([
             'success' => true,
