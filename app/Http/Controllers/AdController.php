@@ -13,12 +13,22 @@ use Illuminate\Validation\Rule;
 
 class AdController extends Controller
 {
+    private function ensureAdmin(): void
+    {
+        abort_unless(Auth::user()?->is_admin, 403);
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         return view('ads.index');
+    }
+
+    public function myAds()
+    {
+        return view('ads.my');
     }
 
     public function create()
@@ -31,10 +41,29 @@ class AdController extends Controller
     public function data(): JsonResponse
     {
         $ads = Ad::with('category', 'user', 'images')->latest()->get();
+        $title = 'All ads';
 
         return response()->json([
             'success' => true,
             'data' => $ads,
+            'title' => $title,
+            'errors' => null,
+        ]);
+    }
+
+    public function myAdsData(): JsonResponse
+    {
+        $user = Auth::user();
+
+        $ads = Ad::with('category', 'user', 'images')
+            ->where('user_id', $user?->id)
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $ads,
+            'title' => 'My ads',
             'errors' => null,
         ]);
     }
@@ -92,6 +121,8 @@ class AdController extends Controller
 
     public function edit(Ad $ad)
     {
+        $this->ensureAdmin();
+
         return view('ads.edit', [
             'ad' => $ad->load('images'),
             'categories' => Category::orderBy('name')->get(),
@@ -100,6 +131,8 @@ class AdController extends Controller
 
     public function update(Request $request, Ad $ad): JsonResponse
     {
+        $this->ensureAdmin();
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'category_id' => ['required', 'exists:categories,id'],
@@ -143,6 +176,8 @@ class AdController extends Controller
 
     public function destroy(Ad $ad): JsonResponse
     {
+        $this->ensureAdmin();
+
         foreach ($ad->images as $image) {
             Storage::disk('public')->delete($image->image_path);
             $image->delete();

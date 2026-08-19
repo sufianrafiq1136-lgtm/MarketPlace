@@ -15,9 +15,10 @@ async function loadAds() {
     if (!container) {
         return;
     }
+    const endpoint = container.dataset.endpoint || '/ads/data';
 
     try {
-        const response = await fetch('/ads/data', {
+        const response = await fetch(endpoint, {
             headers: { 'Accept': 'application/json' },
         });
 
@@ -38,6 +39,7 @@ async function loadAds() {
 function displayAds(ads) {
     const container = document.getElementById('adsContainer');
     if (!container) return;
+    const canManage = container.dataset.canManage === '1';
 
     container.innerHTML = '';
 
@@ -70,8 +72,10 @@ function displayAds(ads) {
                         </div>
                         <div class="ad-buttons">
                             <a class="btn btn-sm btn-outline-secondary flex-fill" href="/ads/${ad.id}">View</a>
-                            <button class="btn btn-sm btn-primary flex-fill" data-id="${ad.id}" data-action="edit">Edit</button>
-                            <button class="btn btn-sm btn-danger flex-fill" data-id="${ad.id}" data-action="delete">Delete</button>
+                            ${canManage ? `
+                                <button class="btn btn-sm btn-primary flex-fill" data-id="${ad.id}" data-action="edit">Edit</button>
+                                <button class="btn btn-sm btn-danger flex-fill" data-id="${ad.id}" data-action="delete">Delete</button>
+                            ` : ''}
                         </div>
                     </div>
                 </div>

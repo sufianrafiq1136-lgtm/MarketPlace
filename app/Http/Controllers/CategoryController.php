@@ -10,6 +10,11 @@ use Illuminate\Validation\ValidationException;
 
 class CategoryController extends Controller
 {
+    private function ensureAdmin(): void
+    {
+        abort_unless(auth()->user()?->is_admin, 403);
+    }
+
     // Show the category management page
     public function index()
     {
@@ -31,6 +36,8 @@ class CategoryController extends Controller
     // Create a new category
     public function store(Request $request): JsonResponse
     {
+        $this->ensureAdmin();
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
         ]);
@@ -68,6 +75,8 @@ class CategoryController extends Controller
     // Update an existing category
     public function update(Request $request, Category $category): JsonResponse
     {
+        $this->ensureAdmin();
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255'],
@@ -94,6 +103,8 @@ class CategoryController extends Controller
     // Delete a category
     public function destroy(Category $category): JsonResponse
     {
+        $this->ensureAdmin();
+
         $category->delete();
 
         return response()->json([

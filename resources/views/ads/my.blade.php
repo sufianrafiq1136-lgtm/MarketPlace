@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ isset($myAds) && $myAds ? 'My Ads' : 'All ads' }}
+            My Ads
         </h2>
     </x-slot>
 
@@ -9,17 +9,15 @@
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 bg-white">
-                    <div class="d-flex justify-content-end mb-4">
-                        <a href="{{ route('ads.create') }}" class="btn btn-primary">
-                            Add New Ad
-                        </a>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h3 class="h4 mb-1">My Published Ads</h3>
+                            <p class="text-muted mb-0">Only the ads created by your account are shown here.</p>
+                        </div>
+                        <a href="{{ route('ads.create') }}" class="btn btn-primary">Add New Ad</a>
                     </div>
-                    <div
-                        class="row g-4"
-                        id="adsContainer"
-                        data-endpoint="{{ isset($myAds) && $myAds ? route('ads.my.data') : route('ads.data') }}"
-                        data-can-manage="{{ isset($myAds) && $myAds ? '1' : '0' }}"
-                    >
+
+                    <div class="row g-4" id="adsContainer" data-endpoint="{{ route('ads.my.data') }}" data-can-manage="{{ auth()->user()?->is_admin ? '1' : '0' }}">
                         <div class="col-12 text-sm text-gray-500">
                             Loading ads...
                         </div>

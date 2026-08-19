@@ -3,7 +3,7 @@
 <x-app-layout>
     {{-- The header slot is rendered by the shared authenticated layout. --}}
     <x-slot name="header">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <p class="text-sm font-medium text-indigo-600">Marketplace setup</p>
                 <h2 class="mt-1 text-2xl font-bold tracking-tight text-gray-900">
@@ -11,18 +11,20 @@
                 </h2>
             </div>
 
-            <button id="btnAddCategory" type="button"
-                class="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z" />
-                </svg>
-                Add category
-            </button>
+            @if(auth()->check() && auth()->user()?->is_admin)
+                <button id="btnAddCategory" type="button"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z" />
+                    </svg>
+                    Add category
+                </button>
+            @endif
         </div>
     </x-slot>
 
     {{-- Main category-management content. --}}
-    <div class="min-h-[calc(100vh-4rem)] bg-slate-50 py-8">
+    <div class="min-h-[calc(100vh-4rem)] bg-slate-50 py-8" data-can-manage="{{ auth()->check() && auth()->user()?->is_admin ? '1' : '0' }}">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {{-- Summary card; JavaScript fills the count after loading the API data. --}}
             <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -82,6 +84,7 @@
         </div>
     </div>
     {{-- Add category modal. It starts hidden and is opened by the Add category button. --}}
+    @if(auth()->check() && auth()->user()?->is_admin)
     <div id="categoryModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="categoryModalTitle">
         <div id="categoryModalBackdrop" class="absolute inset-0 bg-gray-900/40"></div>
         <div class="relative flex min-h-full items-center justify-center p-4">
@@ -114,5 +117,6 @@
             </div>
         </div>
     </div>
+    @endif
 
 </x-app-layout>

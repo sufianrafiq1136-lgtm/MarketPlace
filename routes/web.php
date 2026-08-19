@@ -28,21 +28,29 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // Ads
+    Route::get('/my-ads', [AdController::class, 'myAds'])->name('ads.my');
     Route::get('/ads/create', [AdController::class, 'create'])->name('ads.create');
     Route::post('/ads', [AdController::class, 'store'])->name('ads.store');
     Route::get('/ads/{ad}/edit', [AdController::class, 'edit'])->name('ads.edit');
     Route::put('/ads/{ad}', [AdController::class, 'update'])->name('ads.update');
     Route::delete('/ads/{ad}', [AdController::class, 'destroy'])->name('ads.destroy');
     
-    // AJAX endpoint used by the categories table to fetch records without reloading the page.
-    Route::get('/categories/data', [CategoryController::class, 'data'])
-        ->name('categories.data');
-
-    // Resource routes create the standard index, create, store, edit, update, and delete URLs.
-    Route::resource('categories', CategoryController::class);
 });
 Route::get('/ads/data', [AdController::class, 'data'])->name('ads.data');
+Route::get('/my-ads/data', [AdController::class, 'myAdsData'])->middleware('auth')->name('ads.my.data');
 Route::get('/ads', [AdController::class, 'index'])->name('ads.index');
 Route::get('/ads/{ad}', [AdController::class, 'show'])  ->name('ads.show');
+
+// Categories are readable by everyone.
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+Route::get('/categories/data', [CategoryController::class, 'data'])->name('categories.data');
+Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+
+// Category changes are admin-only.
+Route::middleware('auth')->group(function () {
+    Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+});
 
 require __DIR__.'/auth.php';

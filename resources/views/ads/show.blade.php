@@ -68,6 +68,10 @@
                                             <span>{{ $ad->user?->name ?? 'N/A' }}</span>
                                         </li>
                                         <li class="list-group-item px-0 d-flex justify-content-between">
+                                            <strong>Owner Number</strong>
+                                            <span>{{ $ad->user?->phone ?? 'N/A' }}</span>
+                                        </li>
+                                        <li class="list-group-item px-0 d-flex justify-content-between">
                                             <strong>Status</strong>
                                             <span>{{ ucfirst($ad->status) }}</span>
                                         </li>

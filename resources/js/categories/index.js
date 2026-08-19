@@ -26,6 +26,7 @@ let formError;
 
 let btnAddCategory;
 let btnSaveCategory;
+let canManageCategories = false;
 
 // Used later for Update
 let editingCategoryId = null;
@@ -49,6 +50,7 @@ function init() {
 
     btnAddCategory = document.getElementById('btnAddCategory');
     btnSaveCategory = document.getElementById('btnSaveCategory');
+    canManageCategories = document.querySelector('[data-can-manage]')?.dataset.canManage === '1';
 
     attachEvents();
 
@@ -134,16 +136,8 @@ function renderCategories(categories) {
     let html = '';
 
     categories.forEach((category, index) => {
-        html += `
-            <tr
-                data-category="${category.name.toLowerCase()} ${category.slug.toLowerCase()}">
-                <td>${index + 1}</td>
-                <td>${category.name}</td>
-                <td>${category.slug}</td>
-                <td>
-                    ${new Date(category.created_at).toLocaleDateString()}
-                </td>
-                <td>
+        const actions = canManageCategories
+            ? `
                     <button
                         class="edit-btn"
                         data-id="${category.id}">
@@ -154,6 +148,20 @@ function renderCategories(categories) {
                         data-id="${category.id}">
                         Delete
                     </button>
+              `
+            : '<span class="text-gray-400">View only</span>';
+
+        html += `
+            <tr
+                data-category="${category.name.toLowerCase()} ${category.slug.toLowerCase()}">
+                <td>${index + 1}</td>
+                <td>${category.name}</td>
+                <td>${category.slug}</td>
+                <td>
+                    ${new Date(category.created_at).toLocaleDateString()}
+                </td>
+                <td>
+                    ${actions}
                 </td>
             </tr>
         `;
@@ -383,13 +391,12 @@ function searchCategories(query) {
 
 }
 function attachEvents() {
-    console.log('btnAddCategory', btnAddCategory);
-    btnAddCategory.addEventListener('click', () => {
-        resetForm();
-
-        openModal();
-
-    });
+    if (canManageCategories && btnAddCategory) {
+        btnAddCategory.addEventListener('click', () => {
+            resetForm();
+            openModal();
+        });
+    }
 
     document
         .getElementById('btnCancelCategory')
@@ -403,33 +410,35 @@ function attachEvents() {
         .getElementById('categoryModalBackdrop')
         ?.addEventListener('click', closeModal);
 
-    form?.addEventListener('submit', (event) => {
-        event.preventDefault();
+    if (canManageCategories) {
+        form?.addEventListener('submit', (event) => {
+            event.preventDefault();
 
-        if (editingCategoryId) {
-            updateCategory();
-            return;
-        }
+            if (editingCategoryId) {
+                updateCategory();
+                return;
+            }
 
-        createCategory();
-    });
+            createCategory();
+        });
 
-    tableBody.addEventListener('click', (event) => {
-        const editButton = event.target.closest('.edit-btn');
-        if (editButton) {
-            const id = editButton.dataset.id;
-            editCategory(id);
-            return;
-        }
-    });
-    tableBody.addEventListener('click', (event) => {
-        const deleteButton = event.target.closest('.delete-btn');
-        if (deleteButton) {
-            const id = deleteButton.dataset.id;
-            deleteCategory(id);
-            return;
-        }
-    });
+        tableBody.addEventListener('click', (event) => {
+            const editButton = event.target.closest('.edit-btn');
+            if (editButton) {
+                const id = editButton.dataset.id;
+                editCategory(id);
+                return;
+            }
+        });
+        tableBody.addEventListener('click', (event) => {
+            const deleteButton = event.target.closest('.delete-btn');
+            if (deleteButton) {
+                const id = deleteButton.dataset.id;
+                deleteCategory(id);
+                return;
+            }
+        });
+    }
 
     searchInput?.addEventListener('input', e => {
 
