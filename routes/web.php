@@ -1,8 +1,12 @@
 <?php
+use App\Mail\TestMail;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\AdController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+
+
 
 Route::get('/', function () {
     // The welcome page is publicly accessible.
@@ -24,7 +28,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // Ads
+    Route::get('/ads/create', [AdController::class, 'create'])->name('ads.create');
     Route::post('/ads', [AdController::class, 'store'])->name('ads.store');
+    Route::get('/ads/{ad}/edit', [AdController::class, 'edit'])->name('ads.edit');
     Route::put('/ads/{ad}', [AdController::class, 'update'])->name('ads.update');
     Route::delete('/ads/{ad}', [AdController::class, 'destroy'])->name('ads.destroy');
     

@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Http\Controllers\Auth;
-
+use App\Mail\WelcomeMail;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -58,6 +59,7 @@ class RegisteredUserController extends Controller
             'profile_image' => null,
             'is_admin' => false,
         ]);
+        Mail::to($user->email)->send(new WelcomeMail($user));
 
         event(new Registered($user));
 

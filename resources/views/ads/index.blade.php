@@ -43,4 +43,6 @@
             margin-top: 0.25rem;
         }
     </style>
+
+    @vite(['resources/js/ads.js'])
 </x-app-layout>

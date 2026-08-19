@@ -6,6 +6,10 @@ use Illuminate\Http\Request;
 use App\Models\Ad;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class AdController extends Controller
 {
@@ -15,6 +19,13 @@ class AdController extends Controller
     public function index()
     {
         return view('ads.index');
+    }
+
+    public function create()
+    {
+        return view('ads.create', [
+            'categories' => Category::orderBy('name')->get(),
+        ]);
     }
 
     public function data(): JsonResponse
@@ -30,48 +41,121 @@ class AdController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function store(Request $request): JsonResponse
     {
-        //
-    }
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'description' => ['required', 'string'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'condition' => ['required', Rule::in(['new', 'used'])],
+            'city' => ['required', 'string', 'max:255'],
+            'status' => ['required', Rule::in(['available', 'sold', 'pending'])],
+            'images.*' => ['nullable', 'image', 'max:4096'],
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
+        $ad = Ad::create([
+            'user_id' => Auth::id(),
+            'category_id' => $validated['category_id'],
+            'title' => $validated['title'],
+            'slug' => Str::slug($validated['title']).'-'.Str::lower(Str::random(6)),
+            'description' => $validated['description'],
+            'price' => $validated['price'],
+            'condition' => $validated['condition'],
+            'city' => $validated['city'],
+            'status' => $validated['status'],
+        ]);
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('ad_images', 'public');
+                $ad->images()->create(['image_path' => $path]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $ad->load('category', 'user', 'images'),
+            'errors' => null,
+        ], 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Ad $ad): JsonResponse
     {
-        //
+        return response()->json([
+            'success' => true,
+            'data' => $ad->load('category', 'user', 'images'),
+            'errors' => null,
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function edit(Ad $ad)
     {
-        //
+        return view('ads.edit', [
+            'ad' => $ad->load('images'),
+            'categories' => Category::orderBy('name')->get(),
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Ad $ad): JsonResponse
     {
-        //
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'description' => ['required', 'string'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'condition' => ['required', Rule::in(['new', 'used'])],
+            'city' => ['required', 'string', 'max:255'],
+            'status' => ['required', Rule::in(['available', 'sold', 'pending'])],
+            'images.*' => ['nullable', 'image', 'max:4096'],
+        ]);
+
+        $ad->update([
+            'category_id' => $validated['category_id'],
+            'title' => $validated['title'],
+            'slug' => Str::slug($validated['title']).'-'.Str::lower(Str::random(6)),
+            'description' => $validated['description'],
+            'price' => $validated['price'],
+            'condition' => $validated['condition'],
+            'city' => $validated['city'],
+            'status' => $validated['status'],
+        ]);
+
+        if ($request->hasFile('images')) {
+            foreach ($ad->images as $existingImage) {
+                Storage::disk('public')->delete($existingImage->image_path);
+                $existingImage->delete();
+            }
+
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('ad_images', 'public');
+                $ad->images()->create(['image_path' => $path]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $ad->fresh()->load('category', 'user', 'images'),
+            'errors' => null,
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Ad $ad): JsonResponse
     {
-        //
+        foreach ($ad->images as $image) {
+            Storage::disk('public')->delete($image->image_path);
+            $image->delete();
+        }
+
+        $ad->delete();
+
+        return response()->json([
+            'success' => true,
+            'data' => null,
+            'errors' => null,
+        ]);
     }
 }

@@ -5,6 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     loadAds();
+    bindAdActions();
 });
 
 async function loadAds() {
@@ -107,13 +108,15 @@ function displayAds(ads) {
                         <div class="ad-buttons">
                             <button
                                 class="btn btn-sm btn-primary flex-fill"
-                                data-id="${ad.id}">
+                                data-id="${ad.id}"
+                                data-action="edit">
                                 Edit
                             </button>
 
                             <button
                                 class="btn btn-sm btn-danger flex-fill"
-                                data-id="${ad.id}">
+                                data-id="${ad.id}"
+                                data-action="delete">
                                 Delete
                             </button>
                         </div>
@@ -123,5 +126,45 @@ function displayAds(ads) {
         `;
 
         container.insertAdjacentHTML('beforeend', card);
+    });
+}
+
+function bindAdActions() {
+    document.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-action]');
+
+        if (!button) {
+            return;
+        }
+
+        const adId = button.dataset.id;
+
+        if (button.dataset.action === 'edit') {
+            window.location.href = `/ads/${adId}/edit`;
+            return;
+        }
+
+        if (button.dataset.action === 'delete') {
+            const confirmed = window.confirm('Delete this ad? This cannot be undone.');
+            if (!confirmed) {
+                return;
+            }
+
+            const response = await fetch(`/ads/${adId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                console.error('Failed to delete ad');
+                return;
+            }
+
+            loadAds();
+        }
     });
 }
