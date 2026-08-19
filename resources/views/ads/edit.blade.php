@@ -76,6 +76,7 @@
                     <div class="mb-3">
                         <label for="images" class="form-label">Replace Photos</label>
                         <input type="file" class="form-control" id="images" name="images[]" accept="image/*" multiple>
+                        <div class="row g-2 mt-3" id="imagesPreview"></div>
                         <div class="text-danger small" id="imagesError"></div>
                     </div>
 

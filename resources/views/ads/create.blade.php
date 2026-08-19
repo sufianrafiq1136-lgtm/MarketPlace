@@ -150,6 +150,7 @@
                         >
                             <option value="available">Available</option>
                             <option value="sold">Sold</option>
+                            <option value="pending">Pending</option>
                         </select>
 
                         <div class="text-danger small" id="statusError"></div>
@@ -174,6 +175,8 @@
                         <small class="text-muted">
                             You can select multiple photos.
                         </small>
+
+                        <div class="row g-2 mt-3" id="imagesPreview"></div>
 
                         <div class="text-danger small" id="imagesError"></div>
                     </div>

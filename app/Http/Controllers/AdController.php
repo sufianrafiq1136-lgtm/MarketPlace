@@ -83,12 +83,10 @@ class AdController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Ad $ad): JsonResponse
+    public function show(Ad $ad)
     {
-        return response()->json([
-            'success' => true,
-            'data' => $ad->load('category', 'user', 'images'),
-            'errors' => null,
+        return view('ads.show', [
+            'ad' => $ad->load('category', 'user', 'images'),
         ]);
     }
 

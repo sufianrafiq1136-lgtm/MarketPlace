@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Mail\LoginNotificationMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -51,6 +53,11 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+        RateLimiter::clear($this->throttleKey());
+
+        Mail::to(Auth::user()->email)->send(
+            new LoginNotificationMail(Auth::user())
+        );
     }
 
     /**
@@ -81,6 +88,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }

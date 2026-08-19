@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bindCreateAdForm();
     bindEditAdForm();
     bindAdActions();
+    bindImagePreview();
 });
 
 async function loadAds() {
@@ -68,6 +69,7 @@ function displayAds(ads) {
                             <p class="mb-0"><strong>Condition:</strong> ${ad.condition}</p>
                         </div>
                         <div class="ad-buttons">
+                            <a class="btn btn-sm btn-outline-secondary flex-fill" href="/ads/${ad.id}">View</a>
                             <button class="btn btn-sm btn-primary flex-fill" data-id="${ad.id}" data-action="edit">Edit</button>
                             <button class="btn btn-sm btn-danger flex-fill" data-id="${ad.id}" data-action="delete">Delete</button>
                         </div>
@@ -124,6 +126,41 @@ function bindEditAdForm() {
     if (!form) return;
 
     form.addEventListener('submit', submitEditForm);
+}
+
+function bindImagePreview() {
+    const input = document.getElementById('images');
+    const preview = document.getElementById('imagesPreview');
+
+    if (!input || !preview) {
+        return;
+    }
+
+    input.addEventListener('change', () => {
+        preview.innerHTML = '';
+
+        const files = Array.from(input.files || []);
+        if (!files.length) {
+            return;
+        }
+
+        files.forEach((file) => {
+            const reader = new FileReader();
+
+            reader.onload = (event) => {
+                preview.insertAdjacentHTML(
+                    'beforeend',
+                    `<div class="col-6 col-md-3">
+                        <div class="border rounded overflow-hidden bg-light">
+                            <img src="${event.target.result}" alt="${file.name}" class="w-100" style="height: 140px; object-fit: cover;">
+                        </div>
+                    </div>`
+                );
+            };
+
+            reader.readAsDataURL(file);
+        });
+    });
 }
 
 async function submitAdForm(event) {

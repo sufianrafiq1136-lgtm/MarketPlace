@@ -9,6 +9,11 @@
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 bg-white">
+                    <div class="d-flex justify-content-end mb-4">
+                        <a href="{{ route('ads.create') }}" class="btn btn-primary">
+                            Add New Ad
+                        </a>
+                    </div>
                     <div class="row g-4" id="adsContainer">
                         <div class="col-12 text-sm text-gray-500">
                             Loading ads...
