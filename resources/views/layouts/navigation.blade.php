@@ -15,6 +15,17 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('ads.index')" :active="request()->routeIs('ads.*')">
+                        {{ __('Marketplace') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('favorites.index')" :active="request()->routeIs('favorites.*')">
+                        {{ __('Favorites') }}
+                    </x-nav-link>
+                    @if(Auth::user()?->is_admin)
+                        <x-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.*')">
+                            {{ __('Admin Panel') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -34,13 +45,17 @@
                     </x-slot>
 
                     <x-slot name="content">
-                        <x-dropdown-link :href="route('ads.my')">
-                            {{ __('My Ads') }}
-                        </x-dropdown-link>
+                    <x-dropdown-link :href="route('ads.my')">
+                        {{ __('My Ads') }}
+                    </x-dropdown-link>
 
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
+                    <x-dropdown-link :href="route('favorites.index')">
+                        {{ __('Favorites') }}
+                    </x-dropdown-link>
+
+                    <x-dropdown-link :href="route('profile.edit')">
+                        {{ __('Profile') }}
+                    </x-dropdown-link>
 
                         <!-- Authentication -->
                         <form method="POST" action="{{ route('logout') }}">
@@ -74,6 +89,17 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('ads.index')" :active="request()->routeIs('ads.*')">
+                {{ __('Marketplace') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('favorites.index')" :active="request()->routeIs('favorites.*')">
+                {{ __('Favorites') }}
+            </x-responsive-nav-link>
+            @if(Auth::user()?->is_admin)
+                <x-responsive-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.*')">
+                    {{ __('Admin Panel') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
@@ -86,6 +112,10 @@
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('ads.my')">
                     {{ __('My Ads') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('favorites.index')">
+                    {{ __('Favorites') }}
                 </x-responsive-nav-link>
 
                 <x-responsive-nav-link :href="route('profile.edit')">

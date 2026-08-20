@@ -15,7 +15,22 @@
                             <p class="text-muted mb-0">{{ $ad->city }} | {{ ucfirst($ad->condition) }} | {{ ucfirst($ad->status) }}</p>
                         </div>
                         <div class="d-flex gap-2">
-                            <a href="{{ route('ads.edit', $ad) }}" class="btn btn-primary">Edit</a>
+                            @auth
+                                <form method="POST" action="{{ route('ads.favorite.toggle', $ad) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-danger">
+                                        {{ auth()->user()->favorites()->where('ad_id', $ad->id)->exists() ? 'Unfavorite' : 'Favorite' }}
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('ads.report.store', $ad) }}">
+                                    @csrf
+                                    <input type="hidden" name="reason" value="This ad looks suspicious and should be reviewed by the admin team.">
+                                    <button type="submit" class="btn btn-outline-warning">Report</button>
+                                </form>
+                            @endauth
+                            @if(auth()->user()?->is_admin)
+                                <a href="{{ route('ads.edit', $ad) }}" class="btn btn-primary">Edit</a>
+                            @endif
                             <a href="{{ route('ads.index') }}" class="btn btn-outline-secondary">Back</a>
                         </div>
                     </div>
@@ -80,6 +95,20 @@
                                             <span>{{ $ad->created_at?->format('M d, Y') }}</span>
                                         </li>
                                     </ul>
+
+                                    @auth
+                                        <div class="mt-4 p-3 bg-light rounded">
+                                            <form method="POST" action="{{ route('ads.report.store', $ad) }}" class="d-grid gap-2">
+                                                @csrf
+                                                <label class="form-label fw-semibold" for="reason">Report this ad</label>
+                                                <textarea name="reason" id="reason" class="form-control" rows="4" placeholder="Describe the issue" required></textarea>
+                                                @error('reason')
+                                                    <div class="text-danger small">{{ $message }}</div>
+                                                @enderror
+                                                <button type="submit" class="btn btn-warning">Submit report</button>
+                                            </form>
+                                        </div>
+                                    @endauth
                                 </div>
                             </div>
                         </div>

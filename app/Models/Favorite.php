@@ -20,4 +20,9 @@ class Favorite extends Model
     {
         return $this->belongsTo(Ad::class);
     }
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 }

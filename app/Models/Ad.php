@@ -29,4 +29,14 @@ class Ad extends Model
     {
         return $this->hasMany(AdImage::class);
     }
+
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
 }

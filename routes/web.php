@@ -3,7 +3,12 @@ use App\Mail\TestMail;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\AdController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Ad;
+use App\Models\Favorite;
+use App\Models\Report;
 use Illuminate\Support\Facades\Route;
 
 
@@ -14,8 +19,35 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    // Dashboard requires authentication and a verified email address.
-    return view('dashboard');
+    $user = auth()->user();
+
+    if ($user?->is_admin) {
+        $stats = [
+            'users' => \App\Models\User::count(),
+            'ads' => Ad::count(),
+            'favorites' => Favorite::count(),
+            'reports' => Report::count(),
+        ];
+
+        $recentReports = Report::with('ad.user', 'user')
+            ->latest()
+            ->take(6)
+            ->get();
+
+        return view('dashboard-admin', compact('stats', 'recentReports'));
+    }
+
+    $favoriteCount = Favorite::where('user_id', $user?->id)->count();
+    $myAdsCount = Ad::where('user_id', $user?->id)->count();
+    $myReportsCount = Report::where('user_id', $user?->id)->count();
+
+    $recentFavorites = Favorite::with('ad.category')
+        ->where('user_id', $user?->id)
+        ->latest()
+        ->take(6)
+        ->get();
+
+    return view('dashboard-customer', compact('favoriteCount', 'myAdsCount', 'myReportsCount', 'recentFavorites'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -34,6 +66,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/ads/{ad}/edit', [AdController::class, 'edit'])->name('ads.edit');
     Route::put('/ads/{ad}', [AdController::class, 'update'])->name('ads.update');
     Route::delete('/ads/{ad}', [AdController::class, 'destroy'])->name('ads.destroy');
+    Route::post('/ads/{ad}/favorite', [FavoriteController::class, 'toggle'])->name('ads.favorite.toggle');
+    Route::post('/ads/{ad}/report', [ReportController::class, 'store'])->name('ads.report.store');
+    Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
     
 });
 Route::get('/ads/data', [AdController::class, 'data'])->name('ads.data');
