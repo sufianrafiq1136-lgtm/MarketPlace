@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Ad;
 use App\Models\Category;
+use App\Mail\AdCreatedMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -101,6 +103,10 @@ class AdController extends Controller
                 $ad->images()->create(['image_path' => $path]);
             }
         }
+
+        Mail::to(Auth::user()->email)->send(
+            new AdCreatedMail($ad->load('category', 'user'))
+        );
 
         return response()->json([
             'success' => true,
