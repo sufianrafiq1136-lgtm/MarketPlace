@@ -114,8 +114,15 @@ class AdController extends Controller
      */
     public function show(Ad $ad)
     {
+        $ad->load([
+            'category',
+            'user',
+            'images',
+            'messages' => fn ($query) => $query->with(['sender', 'receiver'])->latest(),
+        ]);
+
         return view('ads.show', [
-            'ad' => $ad->load('category', 'user', 'images'),
+            'ad' => $ad,
         ]);
     }
 

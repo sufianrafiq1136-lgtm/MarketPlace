@@ -1,4 +1,5 @@
 <?php
+
 use App\Mail\TestMail;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\AdController;
@@ -6,8 +7,10 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\MessageController;
 use App\Models\Ad;
 use App\Models\Favorite;
+use App\Models\Message;
 use App\Models\Report;
 use Illuminate\Support\Facades\Route;
 
@@ -34,20 +37,41 @@ Route::get('/dashboard', function () {
             ->take(6)
             ->get();
 
-        return view('dashboard-admin', compact('stats', 'recentReports'));
+        $recentChats = Message::with(['sender', 'receiver', 'ad'])
+            ->where(function ($query) use ($user) {
+                $query->where('sender_id', $user->id)
+                    ->orWhere('receiver_id', $user->id);
+            })
+            ->latest()
+            ->take(6)
+            ->get();
+
+        return view('dashboard-admin', compact('stats', 'recentReports', 'recentChats'));
     }
 
     $favoriteCount = Favorite::where('user_id', $user?->id)->count();
     $myAdsCount = Ad::where('user_id', $user?->id)->count();
     $myReportsCount = Report::where('user_id', $user?->id)->count();
-
     $recentFavorites = Favorite::with('ad.category')
         ->where('user_id', $user?->id)
         ->latest()
         ->take(6)
         ->get();
 
-    return view('dashboard-customer', compact('favoriteCount', 'myAdsCount', 'myReportsCount', 'recentFavorites'));
+    $recentChats = Message::with(['sender', 'receiver', 'ad'])
+        ->where(function ($query) use ($user) {
+            $query->where('sender_id', $user->id)
+                ->orWhere('receiver_id', $user->id);
+        })
+        ->latest()
+        ->take(6)
+        ->get();
+
+    $unreadMessages = Message::where('receiver_id', $user?->id)
+        ->where('is_read', false)
+        ->count();
+
+    return view('dashboard-customer', compact('favoriteCount', 'myAdsCount', 'myReportsCount', 'recentFavorites', 'recentChats', 'unreadMessages'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -58,7 +82,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
+
     // Ads
     Route::get('/my-ads', [AdController::class, 'myAds'])->name('ads.my');
     Route::get('/ads/create', [AdController::class, 'create'])->name('ads.create');
@@ -69,12 +93,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/ads/{ad}/favorite', [FavoriteController::class, 'toggle'])->name('ads.favorite.toggle');
     Route::post('/ads/{ad}/report', [ReportController::class, 'store'])->name('ads.report.store');
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
-    
+
+    // Messages
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
 });
 Route::get('/ads/data', [AdController::class, 'data'])->name('ads.data');
 Route::get('/my-ads/data', [AdController::class, 'myAdsData'])->middleware('auth')->name('ads.my.data');
 Route::get('/ads', [AdController::class, 'index'])->name('ads.index');
-Route::get('/ads/{ad}', [AdController::class, 'show'])  ->name('ads.show');
+Route::get('/ads/{ad}', [AdController::class, 'show'])->name('ads.show');
 
 // Categories are readable by everyone.
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
@@ -88,4 +115,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

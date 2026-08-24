@@ -22,8 +22,15 @@
                 </div>
             </div>
 
-            <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
+            <div class="mb-6">
+                <a href="{{ route('messages.index') }}" class="btn btn-dark">
+                    Open Chats
+                </a>
+            </div>
+
+            <div class="grid gap-6 lg:grid-cols-2">
+                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h3 class="h4 mb-0">Recent Favorites</h3>
                         <a href="{{ route('ads.create') }}" class="btn btn-primary btn-sm">Post an Ad</a>
@@ -55,6 +62,43 @@
                             @endforeach
                         </div>
                     @endif
+                    </div>
+                </div>
+
+                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h3 class="h4 mb-0">Chats</h3>
+                                <p class="text-muted mb-0">Messages related to your ads and conversations.</p>
+                            </div>
+                            <span class="badge text-bg-warning">{{ $unreadMessages }} unread</span>
+                        </div>
+
+                        @if ($recentChats->isEmpty())
+                            <p class="text-gray-500 mb-0">No chats yet. Buyer messages will show up here.</p>
+                        @else
+                            <div class="d-flex flex-column gap-3">
+                                @foreach ($recentChats as $message)
+                                    @php
+                                        $isMine = $message->sender_id === auth()->id();
+                                    @endphp
+                                    <a href="{{ route('ads.show', $message->ad) }}" class="text-decoration-none text-reset">
+                                        <div class="p-3 rounded border {{ $isMine ? 'bg-light' : 'bg-white' }}">
+                                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                                <div>
+                                                    <div class="fw-semibold">{{ $isMine ? 'You' : $message->sender?->name }}</div>
+                                                    <div class="text-muted small">{{ $message->ad?->title }}</div>
+                                                </div>
+                                                <div class="text-muted small text-end">{{ $message->created_at?->diffForHumans() }}</div>
+                                            </div>
+                                            <div class="mt-2">{{ \Illuminate\Support\Str::limit($message->message, 120) }}</div>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

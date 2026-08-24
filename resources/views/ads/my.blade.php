@@ -17,9 +17,55 @@
                         <a href="{{ route('ads.create') }}" class="btn btn-primary">Add New Ad</a>
                     </div>
 
-                    <div class="row g-4" id="adsContainer" data-endpoint="{{ route('ads.my.data') }}" data-can-manage="{{ auth()->user()?->is_admin ? '1' : '0' }}">
-                        <div class="col-12 text-sm text-gray-500">
-                            Loading ads...
+                    <div class="row g-4">
+                        <div class="col-12 col-xl-8">
+                            <div class="row g-4" id="adsContainer" data-endpoint="{{ route('ads.my.data') }}" data-can-manage="{{ auth()->user()?->is_admin ? '1' : '0' }}">
+                                <div class="col-12 text-sm text-gray-500">
+                                    Loading ads...
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-xl-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h3 class="h5 mb-1">Chats</h3>
+                                            <p class="text-muted mb-0">Recent conversations about your ads.</p>
+                                        </div>
+                                        <span class="badge text-bg-light">{{ auth()->user()->receivedMessages()->where('is_read', false)->count() }} unread</span>
+                                    </div>
+
+                                    <div class="d-flex flex-column gap-3">
+                                        @php
+                                            $myChats = auth()->user()
+                                                ->receivedMessages()
+                                                ->with(['sender', 'ad'])
+                                                ->latest()
+                                                ->take(6)
+                                                ->get();
+                                        @endphp
+
+                                        @forelse($myChats as $message)
+                                            <a href="{{ route('ads.show', $message->ad) }}" class="text-decoration-none text-reset">
+                                                <div class="p-3 rounded border bg-light">
+                                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                                        <div>
+                                                            <div class="fw-semibold">{{ $message->sender?->name }}</div>
+                                                            <div class="text-muted small">{{ $message->ad?->title }}</div>
+                                                        </div>
+                                                        <div class="text-muted small text-end">{{ $message->created_at?->diffForHumans() }}</div>
+                                                    </div>
+                                                    <div class="mt-2 small text-truncate">{{ $message->message }}</div>
+                                                </div>
+                                            </a>
+                                        @empty
+                                            <div class="text-muted">No chats yet. Messages from buyers will appear here.</div>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
