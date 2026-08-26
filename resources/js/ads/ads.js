@@ -4,11 +4,18 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     loadAds();
+    bindBrowseControls();
     bindCreateAdForm();
     bindEditAdForm();
     bindAdActions();
     bindImagePreview();
 });
+
+let allAds = [];
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' })[character]);
+}
 
 async function loadAds() {
     const container = document.getElementById('adsContainer');
@@ -29,11 +36,48 @@ async function loadAds() {
         const result = await response.json();
 
         if (result.success) {
-            displayAds(result.data);
+            allAds = result.data;
+            displayAds(allAds);
         }
     } catch (error) {
         console.error('Error loading ads:', error);
     }
+}
+
+function bindBrowseControls() {
+    ['adSearch', 'adLocation', 'conditionFilter', 'priceFilter', 'adSort'].forEach((id) => {
+        document.getElementById(id)?.addEventListener('input', filterAds);
+        document.getElementById(id)?.addEventListener('change', filterAds);
+    });
+    document.getElementById('searchAds')?.addEventListener('click', filterAds);
+    document.getElementById('clearFilters')?.addEventListener('click', () => {
+        ['adSearch', 'adLocation'].forEach((id) => { const field = document.getElementById(id); if (field) field.value = ''; });
+        document.getElementById('conditionFilter').value = 'all';
+        document.getElementById('priceFilter').value = 'all';
+        displayAds(allAds);
+    });
+    document.querySelectorAll('[data-category]').forEach((button) => button.addEventListener('click', () => {
+        document.querySelectorAll('[data-category]').forEach((item) => item.classList.remove('active'));
+        button.classList.add('active');
+        filterAds();
+    }));
+}
+
+function filterAds() {
+    const search = document.getElementById('adSearch')?.value.toLowerCase() || '';
+    const location = document.getElementById('adLocation')?.value.toLowerCase() || '';
+    const condition = document.getElementById('conditionFilter')?.value || 'all';
+    const priceRange = document.getElementById('priceFilter')?.value || 'all';
+    const category = document.querySelector('[data-category].active')?.dataset.category || 'all';
+    const filteredAds = allAds.filter((ad) => {
+        const haystack = `${ad.title} ${ad.description} ${ad.category?.name || ''}`.toLowerCase();
+        const price = Number(ad.price);
+        const [minimum, maximum] = priceRange === 'all' ? [0, Infinity] : priceRange.split('-').map(Number);
+        return haystack.includes(search) && String(ad.city || '').toLowerCase().includes(location) && (condition === 'all' || ad.condition === condition) && price >= minimum && price <= maximum && (category === 'all' || String(ad.category?.name || '').toLowerCase().includes(category));
+    });
+    const sort = document.getElementById('adSort')?.value;
+    filteredAds.sort((first, second) => sort === 'price-low' ? Number(first.price) - Number(second.price) : sort === 'price-high' ? Number(second.price) - Number(first.price) : new Date(second.created_at) - new Date(first.created_at));
+    displayAds(filteredAds);
 }
 
 function displayAds(ads) {
@@ -41,18 +85,22 @@ function displayAds(ads) {
     if (!container) return;
     const canManage = container.dataset.canManage === '1';
 
+    const resultsMeta = document.getElementById('resultsMeta');
+    if (resultsMeta) resultsMeta.textContent = `${ads.length} ${ads.length === 1 ? 'listing' : 'listings'} available`;
+
     container.innerHTML = '';
 
     if (!ads.length) {
-        container.innerHTML = '<div class="col-12 text-center"><p>No ads found.</p></div>';
+        container.innerHTML = '<div class="col-12 text-center py-5"><p class="text-muted">No listings match your search.</p></div>';
         return;
     }
 
     ads.forEach((ad) => {
         const firstImage = ad.images && ad.images.length ? ad.images[0].image_path : null;
+        const title = escapeHtml(ad.title);
         const imageMarkup = firstImage
-            ? `<img src="/storage/${firstImage}" class="card-img-top" alt="${ad.title}" style="height: 180px; object-fit: cover;">`
-            : `<div class="card-img-top d-flex align-items-center justify-content-center text-white fw-bold" style="height: 180px; background: linear-gradient(135deg, #60a5fa, #8b5cf6, #f472b6); font-size: 2rem; letter-spacing: 1px;">${ad.title ? ad.title.charAt(0).toUpperCase() : 'A'}</div>`;
+            ? `<img src="/storage/${encodeURI(firstImage)}" class="card-img-top" alt="${title}" style="height: 180px; object-fit: cover;">`
+            : `<div class="card-img-top d-flex align-items-center justify-content-center text-white fw-bold" style="height: 180px; background: linear-gradient(135deg, #356a57, #9cbf55); font-size: 2rem; letter-spacing: 1px;">${title ? title.charAt(0).toUpperCase() : 'A'}</div>`;
 
         container.insertAdjacentHTML(
             'beforeend',
@@ -61,14 +109,12 @@ function displayAds(ads) {
                     ${imageMarkup}
                     <div class="card-body p-4">
                         <div class="d-flex flex-column gap-2">
-                            <h5 class="card-title mb-0">${ad.title}</h5>
-                            <h6 class="text-success mb-0">Rs. ${ad.price}</h6>
+                            <h5 class="card-title mb-0">${title}</h5>
+                            <h6 class="text-success mb-0">Rs. ${Number(ad.price).toLocaleString()}</h6>
                         </div>
-                        <p class="card-text mb-0">${ad.description ?? ''}</p>
+                        <p class="card-text mb-0 text-muted">${escapeHtml(ad.description).slice(0, 90)}${String(ad.description || '').length > 90 ? '...' : ''}</p>
                         <div class="d-flex flex-column gap-2">
-                            <p class="mb-0"><strong>Category:</strong> ${ad.category ? ad.category.name : 'N/A'}</p>
-                            <p class="mb-0"><strong>City:</strong> ${ad.city}</p>
-                            <p class="mb-0"><strong>Condition:</strong> ${ad.condition}</p>
+                            <p class="mb-0 small text-muted">${escapeHtml(ad.category ? ad.category.name : 'Other')} · ${escapeHtml(ad.city)} · ${escapeHtml(ad.condition)}</p>
                         </div>
                         <div class="ad-buttons">
                             <a class="btn btn-sm btn-outline-secondary flex-fill" href="/ads/${ad.id}">View</a>

@@ -10,16 +10,12 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MessageController;
 use App\Models\Ad;
 use App\Models\Favorite;
-use App\Models\Message;
 use App\Models\Report;
 use Illuminate\Support\Facades\Route;
 
 
 
-Route::get('/', function () {
-    // The welcome page is publicly accessible.
-    return view('welcome');
-});
+Route::get('/', [AdController::class, 'index'])->name('home');
 
 Route::get('/dashboard', function () {
     $user = auth()->user();
@@ -37,16 +33,7 @@ Route::get('/dashboard', function () {
             ->take(6)
             ->get();
 
-        $recentChats = Message::with(['sender', 'receiver', 'ad'])
-            ->where(function ($query) use ($user) {
-                $query->where('sender_id', $user->id)
-                    ->orWhere('receiver_id', $user->id);
-            })
-            ->latest()
-            ->take(6)
-            ->get();
-
-        return view('dashboard-admin', compact('stats', 'recentReports', 'recentChats'));
+        return view('dashboard-admin', compact('stats', 'recentReports'));
     }
 
     $favoriteCount = Favorite::where('user_id', $user?->id)->count();
@@ -58,20 +45,7 @@ Route::get('/dashboard', function () {
         ->take(6)
         ->get();
 
-    $recentChats = Message::with(['sender', 'receiver', 'ad'])
-        ->where(function ($query) use ($user) {
-            $query->where('sender_id', $user->id)
-                ->orWhere('receiver_id', $user->id);
-        })
-        ->latest()
-        ->take(6)
-        ->get();
-
-    $unreadMessages = Message::where('receiver_id', $user?->id)
-        ->where('is_read', false)
-        ->count();
-
-    return view('dashboard-customer', compact('favoriteCount', 'myAdsCount', 'myReportsCount', 'recentFavorites', 'recentChats', 'unreadMessages'));
+    return view('dashboard-customer', compact('favoriteCount', 'myAdsCount', 'myReportsCount', 'recentFavorites'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
