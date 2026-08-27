@@ -22,6 +22,7 @@ async function loadAds() {
     if (!container) {
         return;
     }
+
     const endpoint = container.dataset.endpoint || '/ads/data';
 
     try {
@@ -49,13 +50,18 @@ function bindBrowseControls() {
         document.getElementById(id)?.addEventListener('input', filterAds);
         document.getElementById(id)?.addEventListener('change', filterAds);
     });
+
     document.getElementById('searchAds')?.addEventListener('click', filterAds);
     document.getElementById('clearFilters')?.addEventListener('click', () => {
-        ['adSearch', 'adLocation'].forEach((id) => { const field = document.getElementById(id); if (field) field.value = ''; });
+        ['adSearch', 'adLocation'].forEach((id) => {
+            const field = document.getElementById(id);
+            if (field) field.value = '';
+        });
         document.getElementById('conditionFilter').value = 'all';
         document.getElementById('priceFilter').value = 'all';
         displayAds(allAds);
     });
+
     document.querySelectorAll('[data-category]').forEach((button) => button.addEventListener('click', () => {
         document.querySelectorAll('[data-category]').forEach((item) => item.classList.remove('active'));
         button.classList.add('active');
@@ -69,20 +75,36 @@ function filterAds() {
     const condition = document.getElementById('conditionFilter')?.value || 'all';
     const priceRange = document.getElementById('priceFilter')?.value || 'all';
     const category = document.querySelector('[data-category].active')?.dataset.category || 'all';
+
     const filteredAds = allAds.filter((ad) => {
         const haystack = `${ad.title} ${ad.description} ${ad.category?.name || ''}`.toLowerCase();
         const price = Number(ad.price);
         const [minimum, maximum] = priceRange === 'all' ? [0, Infinity] : priceRange.split('-').map(Number);
-        return haystack.includes(search) && String(ad.city || '').toLowerCase().includes(location) && (condition === 'all' || ad.condition === condition) && price >= minimum && price <= maximum && (category === 'all' || String(ad.category?.name || '').toLowerCase().includes(category));
+
+        return haystack.includes(search)
+            && String(ad.city || '').toLowerCase().includes(location)
+            && (condition === 'all' || ad.condition === condition)
+            && price >= minimum
+            && price <= maximum
+            && (category === 'all' || String(ad.category?.name || '').toLowerCase().includes(category));
     });
+
     const sort = document.getElementById('adSort')?.value;
-    filteredAds.sort((first, second) => sort === 'price-low' ? Number(first.price) - Number(second.price) : sort === 'price-high' ? Number(second.price) - Number(first.price) : new Date(second.created_at) - new Date(first.created_at));
+    filteredAds.sort((first, second) => (
+        sort === 'price-low'
+            ? Number(first.price) - Number(second.price)
+            : sort === 'price-high'
+                ? Number(second.price) - Number(first.price)
+                : new Date(second.created_at) - new Date(first.created_at)
+    ));
+
     displayAds(filteredAds);
 }
 
 function displayAds(ads) {
     const container = document.getElementById('adsContainer');
     if (!container) return;
+
     const canManage = container.dataset.canManage === '1';
 
     const resultsMeta = document.getElementById('resultsMeta');
@@ -98,6 +120,8 @@ function displayAds(ads) {
     ads.forEach((ad) => {
         const firstImage = ad.images && ad.images.length ? ad.images[0].image_path : null;
         const title = escapeHtml(ad.title);
+        const adUrl = `/ads/${ad.id}`;
+
         const imageMarkup = firstImage
             ? `<img src="/storage/${encodeURI(firstImage)}" class="card-img-top" alt="${title}" style="height: 180px; object-fit: cover;">`
             : `<div class="card-img-top d-flex align-items-center justify-content-center text-white fw-bold" style="height: 180px; background: linear-gradient(135deg, #356a57, #9cbf55); font-size: 2rem; letter-spacing: 1px;">${title ? title.charAt(0).toUpperCase() : 'A'}</div>`;
@@ -105,7 +129,7 @@ function displayAds(ads) {
         container.insertAdjacentHTML(
             'beforeend',
             `<div class="col-12 col-sm-6 col-lg-3">
-                <div class="ad-card card h-100 shadow-sm border-0 bg-white">
+                <div class="ad-card card h-100 shadow-sm border-0 bg-white" role="link" tabindex="0" data-href="${adUrl}" aria-label="View ${title}">
                     ${imageMarkup}
                     <div class="card-body p-4">
                         <div class="d-flex flex-column gap-2">
@@ -117,7 +141,6 @@ function displayAds(ads) {
                             <p class="mb-0 small text-muted">${escapeHtml(ad.category ? ad.category.name : 'Other')} · ${escapeHtml(ad.city)} · ${escapeHtml(ad.condition)}</p>
                         </div>
                         <div class="ad-buttons">
-                            <a class="btn btn-sm btn-outline-secondary flex-fill" href="/ads/${ad.id}">View</a>
                             ${canManage ? `
                                 <button class="btn btn-sm btn-primary flex-fill" data-id="${ad.id}" data-action="edit">Edit</button>
                                 <button class="btn btn-sm btn-danger flex-fill" data-id="${ad.id}" data-action="delete">Delete</button>
@@ -133,33 +156,52 @@ function displayAds(ads) {
 function bindAdActions() {
     document.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-action]');
-        if (!button) return;
+        if (button) {
+            const adId = button.dataset.id;
 
-        const adId = button.dataset.id;
-
-        if (button.dataset.action === 'edit') {
-            window.location.href = `/ads/${adId}/edit`;
-            return;
-        }
-
-        if (button.dataset.action === 'delete') {
-            if (!window.confirm('Delete this ad? This cannot be undone.')) return;
-
-            const response = await fetch(`/ads/${adId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-                    'Accept': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                console.error('Failed to delete ad');
+            if (button.dataset.action === 'edit') {
+                window.location.href = `/ads/${adId}/edit`;
                 return;
             }
 
-            loadAds();
+            if (button.dataset.action === 'delete') {
+                if (!window.confirm('Delete this ad? This cannot be undone.')) return;
+
+                const response = await fetch(`/ads/${adId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                        'Accept': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to delete ad');
+                    return;
+                }
+
+                loadAds();
+            }
+
+            return;
+        }
+
+        const card = event.target.closest('.ad-card[data-href]');
+        if (!card || event.target.closest('a, button')) {
+            return;
+        }
+
+        window.location.href = card.dataset.href;
+    });
+
+    document.addEventListener('keydown', (event) => {
+        const card = event.target.closest('.ad-card[data-href]');
+        if (!card) return;
+
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            window.location.href = card.dataset.href;
         }
     });
 }
@@ -274,9 +316,11 @@ function showErrors(errors) {
 
 function setButtonLoading(button, loading, label) {
     if (!button) return;
+
     if (!button.dataset.originalText) {
         button.dataset.originalText = button.textContent || label;
     }
+
     button.disabled = loading;
     button.textContent = loading ? label : button.dataset.originalText || label;
 }

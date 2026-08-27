@@ -22,11 +22,9 @@
                                         {{ auth()->user()->favorites()->where('ad_id', $ad->id)->exists() ? 'Unfavorite' : 'Favorite' }}
                                     </button>
                                 </form>
-                                <form method="POST" action="{{ route('ads.report.store', $ad) }}">
-                                    @csrf
-                                    <input type="hidden" name="reason" value="This ad looks suspicious and should be reviewed by the admin team.">
-                                    <button type="submit" class="btn btn-outline-warning">Report</button>
-                                </form>
+                                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#reportAdModal">
+                                    Report
+                                </button>
                             @endauth
                             @if(auth()->user()?->is_admin)
                                 <a href="{{ route('ads.edit', $ad) }}" class="btn btn-primary">Edit</a>
@@ -114,20 +112,6 @@
                                         @endif
                                     @endauth
 
-                                    @auth
-                                        <div class="mt-4 p-3 bg-light rounded">
-                                            <form method="POST" action="{{ route('ads.report.store', $ad) }}" class="d-grid gap-2">
-                                                @csrf
-                                                <label class="form-label fw-semibold" for="reason">Report this ad</label>
-                                                <textarea name="reason" id="reason" class="form-control" rows="4" placeholder="Describe the issue" required></textarea>
-                                                @error('reason')
-                                                    <div class="text-danger small">{{ $message }}</div>
-                                                @enderror
-                                                <button type="submit" class="btn btn-warning">Submit report</button>
-                                            </form>
-                                        </div>
-                                    @endauth
-
                                 </div>
                             </div>
                         </div>
@@ -136,5 +120,33 @@
             </div>
         </div>
     </div>
+
+    @auth
+        <div class="modal fade" id="reportAdModal" tabindex="-1" aria-labelledby="reportAdModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="POST" action="{{ route('ads.report.store', $ad) }}">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="reportAdModalLabel">Report this ad</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-muted mb-3">Tell us what is wrong with this listing. Your report will be reviewed by the admin team.</p>
+                            <label class="form-label fw-semibold" for="reportReason">Reason</label>
+                            <textarea name="reason" id="reportReason" class="form-control" rows="4" placeholder="Describe the issue" required></textarea>
+                            @error('reason')
+                                <div class="text-danger small mt-2">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning">Submit report</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endauth
 
 </x-app-layout>
