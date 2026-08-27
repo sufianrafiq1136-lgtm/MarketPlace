@@ -53,7 +53,7 @@ Before running the project, make sure you have:
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone <https://github.com/sufianrafiq1136-lgtm/MarketPlace>
 cd <project-directory>
 ```
 
