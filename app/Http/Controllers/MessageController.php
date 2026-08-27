@@ -8,6 +8,7 @@ use App\Models\Message;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class MessageController extends Controller
@@ -36,12 +37,14 @@ class MessageController extends Controller
                 ->findOrFail($request->integer('ad'));
             $selectedUserId = $request->integer('user');
 
-            abort_unless(
-                $selectedAd->user_id === $user->id
-                || $selectedAd->messages->contains('sender_id', $user->id)
-                || $selectedAd->messages->contains('receiver_id', $user->id),
-                403
-            );
+            $isAdOwner = (int) $selectedAd->user_id === (int) $user->id;
+            $isConversationParticipant = $selectedAd->messages->contains(function (Message $message) use ($user) {
+                return (int) $message->sender_id === (int) $user->id
+                    || (int) $message->receiver_id === (int) $user->id;
+            });
+            $isStartingChatWithSeller = (int) $selectedAd->user_id === (int) $selectedUserId;
+
+            abort_unless($isAdOwner || $isConversationParticipant || $isStartingChatWithSeller, 403);
 
             $selectedConversation = Message::with(['sender', 'receiver', 'ad'])
                 ->where('ad_id', $selectedAd->id)
@@ -106,7 +109,23 @@ class MessageController extends Controller
 
         $ad = Ad::with('user')->findOrFail($validated['ad_id']);
 
-        abort_if($ad->user_id === Auth::id(), 403, 'You cannot message yourself about your own ad.');
+        abort_if((int) $validated['receiver_id'] === (int) Auth::id(), 422, 'You cannot message yourself.');
+
+        $isOwnerSending = (int) $ad->user_id === (int) Auth::id();
+        $isBuyerMessagingSeller = (int) $validated['receiver_id'] === (int) $ad->user_id;
+        $isExistingParticipant = Message::where('ad_id', $ad->id)
+            ->where(function ($query) use ($validated) {
+                $query->where(function ($inner) use ($validated) {
+                    $inner->where('sender_id', Auth::id())
+                        ->where('receiver_id', $validated['receiver_id']);
+                })->orWhere(function ($inner) use ($validated) {
+                    $inner->where('sender_id', $validated['receiver_id'])
+                        ->where('receiver_id', Auth::id());
+                });
+            })
+            ->exists();
+
+        abort_unless($isBuyerMessagingSeller || $isOwnerSending && $isExistingParticipant || $isExistingParticipant, 403);
 
         $message = Message::create([
             'sender_id' => auth()->id(),
@@ -117,7 +136,14 @@ class MessageController extends Controller
 
         $message->load(['sender', 'receiver', 'ad']);
 
-        broadcast(new MessageSent($message))->toOthers();
+        try {
+            broadcast(new MessageSent($message))->toOthers();
+        } catch (\Throwable $exception) {
+            Log::warning('Realtime chat broadcast unavailable; message was still saved.', [
+                'message_id' => $message->id,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
 
         return response()->json([
             'success' => true,

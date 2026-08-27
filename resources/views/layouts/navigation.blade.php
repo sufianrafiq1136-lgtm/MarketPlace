@@ -21,6 +21,9 @@
                     <x-nav-link :href="route('favorites.index')" :active="request()->routeIs('favorites.*')">
                         {{ __('Favorites') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('messages.index')" :active="request()->routeIs('messages.*')">
+                        {{ __('My Chats') }}
+                    </x-nav-link>
                     @if(Auth::user()?->is_admin)
                         <x-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.*')">
                             {{ __('Admin Panel') }}
@@ -52,6 +55,10 @@
 
                             <x-dropdown-link :href="route('favorites.index')">
                                 {{ __('Favorites') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link :href="route('messages.index')">
+                                {{ __('My Chats') }}
                             </x-dropdown-link>
 
                             <x-dropdown-link :href="route('profile.edit')">
@@ -108,6 +115,9 @@
             <x-responsive-nav-link :href="route('favorites.index')" :active="request()->routeIs('favorites.*')">
                 {{ __('Favorites') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('messages.index')" :active="request()->routeIs('messages.*')">
+                {{ __('My Chats') }}
+            </x-responsive-nav-link>
             @if(Auth::user()?->is_admin)
                 <x-responsive-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.*')">
                     {{ __('Admin Panel') }}
@@ -130,6 +140,10 @@
 
                     <x-responsive-nav-link :href="route('favorites.index')">
                         {{ __('Favorites') }}
+                    </x-responsive-nav-link>
+
+                    <x-responsive-nav-link :href="route('messages.index')">
+                        {{ __('My Chats') }}
                     </x-responsive-nav-link>
 
                     <x-responsive-nav-link :href="route('profile.edit')">

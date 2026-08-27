@@ -73,6 +73,14 @@
 
                                     <p class="mb-3">{{ $ad->description }}</p>
 
+                                    @auth
+                                        @if (auth()->id() !== $ad->user_id)
+                                            <a href="{{ route('messages.index', ['ad' => $ad->id, 'user' => $ad->user_id]) }}" class="btn btn-primary w-100 mb-3">
+                                                Message seller
+                                            </a>
+                                        @endif
+                                    @endauth
+
                                     <ul class="list-group list-group-flush">
                                         <li class="list-group-item px-0 d-flex justify-content-between">
                                             <strong>Category</strong>
@@ -95,6 +103,16 @@
                                             <span>{{ $ad->created_at?->format('M d, Y') }}</span>
                                         </li>
                                     </ul>
+
+                                    @auth
+                                        @if(auth()->id() !== $ad->user_id)
+                                            <div class="mt-4">
+                                                <a href="{{ route('messages.index', ['ad' => $ad->id, 'user' => $ad->user_id]) }}" class="btn btn-primary w-100">
+                                                    Start chat about this ad
+                                                </a>
+                                            </div>
+                                        @endif
+                                    @endauth
 
                                     @auth
                                         <div class="mt-4 p-3 bg-light rounded">
