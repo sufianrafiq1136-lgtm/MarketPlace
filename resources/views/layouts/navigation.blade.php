@@ -1,6 +1,10 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false }" class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        @php
+            $hasUnreadChats = auth()->check()
+                && auth()->user()->receivedMessages()->where('is_read', false)->exists();
+        @endphp
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
@@ -22,7 +26,12 @@
                         {{ __('Favorites') }}
                     </x-nav-link>
                     <x-nav-link :href="route('messages.index')" :active="request()->routeIs('messages.*')">
-                        {{ __('My Chats') }}
+                        <span class="inline-flex items-center gap-2">
+                            {{ __('My Chats') }}
+                            @if ($hasUnreadChats)
+                                <span class="h-2.5 w-2.5 rounded-full bg-blue-500 shadow-[0_0_0_4px_rgba(59,130,246,0.15)]" aria-label="Unread chats"></span>
+                            @endif
+                        </span>
                     </x-nav-link>
                     @if(Auth::user()?->is_admin)
                         <x-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.*')">
@@ -58,7 +67,12 @@
                             </x-dropdown-link>
 
                             <x-dropdown-link :href="route('messages.index')">
-                                {{ __('My Chats') }}
+                                <span class="inline-flex items-center gap-2">
+                                    {{ __('My Chats') }}
+                                    @if ($hasUnreadChats)
+                                        <span class="h-2.5 w-2.5 rounded-full bg-blue-500 shadow-[0_0_0_4px_rgba(59,130,246,0.15)]" aria-label="Unread chats"></span>
+                                    @endif
+                                </span>
                             </x-dropdown-link>
 
                             <x-dropdown-link :href="route('profile.edit')">
@@ -116,7 +130,12 @@
                 {{ __('Favorites') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('messages.index')" :active="request()->routeIs('messages.*')">
-                {{ __('My Chats') }}
+                <span class="inline-flex items-center gap-2">
+                    {{ __('My Chats') }}
+                    @if ($hasUnreadChats)
+                        <span class="h-2.5 w-2.5 rounded-full bg-blue-500 shadow-[0_0_0_4px_rgba(59,130,246,0.15)]" aria-label="Unread chats"></span>
+                    @endif
+                </span>
             </x-responsive-nav-link>
             @if(Auth::user()?->is_admin)
                 <x-responsive-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.*')">
@@ -143,7 +162,12 @@
                     </x-responsive-nav-link>
 
                     <x-responsive-nav-link :href="route('messages.index')">
-                        {{ __('My Chats') }}
+                        <span class="inline-flex items-center gap-2">
+                            {{ __('My Chats') }}
+                            @if ($hasUnreadChats)
+                                <span class="h-2.5 w-2.5 rounded-full bg-blue-500 shadow-[0_0_0_4px_rgba(59,130,246,0.15)]" aria-label="Unread chats"></span>
+                            @endif
+                        </span>
                     </x-responsive-nav-link>
 
                     <x-responsive-nav-link :href="route('profile.edit')">

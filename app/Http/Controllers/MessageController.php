@@ -66,7 +66,7 @@ class MessageController extends Controller
                             ->where('receiver_id', $user->id);
                     });
                 })
-                ->latest()
+                ->orderBy('created_at')
                 ->get();
 
             Message::where('ad_id', $selectedAd->id)

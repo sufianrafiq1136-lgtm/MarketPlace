@@ -29,7 +29,7 @@
             @endisset
 
             <!-- Page Content -->
-            <main>
+            <main class="scroll-smooth">
                 {{ $slot }}
             </main>
         </div>
