@@ -27,6 +27,7 @@
                                     $partner = $conversation->sender_id === auth()->id() ? $conversation->receiver : $conversation->sender;
                                     $isActive = $selectedAd?->id === $conversation->ad_id && (int) $selectedUserId === (int) $partnerId;
                                     $partnerImage = $partner?->profile_image ? asset('storage/' . $partner->profile_image) : null;
+                                    $conversationAdImage = $conversation->ad?->images?->first()?->image_path ? asset('storage/' . $conversation->ad->images->first()->image_path) : null;
                                 @endphp
                                 <a href="{{ route('messages.index', ['ad' => $conversation->ad_id, 'user' => $partnerId]) }}" class="text-decoration-none text-reset">
                                     <div class="conversation-item {{ $isActive ? 'active' : '' }}">
@@ -46,7 +47,14 @@
                                                         <span class="unread-dot" aria-label="Unread chat"></span>
                                                     @endif
                                                 </div>
-                                                <div class="text-muted small text-truncate">{{ $conversation->ad?->title }}</div>
+                                                <div class="d-flex align-items-center gap-2 mt-1">
+                                                    @if ($conversationAdImage)
+                                                        <img src="{{ $conversationAdImage }}" alt="{{ $conversation->ad?->title ?? 'Ad' }}" class="conversation-ad-thumb">
+                                                    @endif
+                                                    <a href="{{ route('ads.show', $conversation->ad_id) }}" class="text-decoration-none small fw-semibold text-primary text-truncate">
+                                                        {{ $conversation->ad?->title }}
+                                                    </a>
+                                                </div>
                                             </div>
                                             </div>
                                             <div class="text-muted small text-end">{{ $conversation->created_at?->diffForHumans() }}</div>
@@ -69,6 +77,7 @@
                                     ? $selectedConversation->first()?->receiver
                                     : ($selectedConversation->first()?->sender ?? $selectedAd->user);
                                 $selectedPartnerImage = $selectedPartner?->profile_image ? asset('storage/' . $selectedPartner->profile_image) : null;
+                                $selectedAdImage = $selectedAd->images?->first()?->image_path ? asset('storage/' . $selectedAd->images->first()->image_path) : null;
                             @endphp
                             <div class="thread-header">
                                 <div class="avatar">
@@ -80,7 +89,14 @@
                                 </div>
                                 <div>
                                     <h2>{{ $selectedPartner?->name ?? 'Chat' }}</h2>
-                                    <div>{{ $selectedAd->title }}</div>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        @if ($selectedAdImage)
+                                            <img src="{{ $selectedAdImage }}" alt="{{ $selectedAd->title }}" class="chat-ad-thumb">
+                                        @endif
+                                        <a href="{{ route('ads.show', $selectedAd) }}" class="text-primary text-decoration-none fw-semibold">
+                                            {{ $selectedAd->title }}
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
 
@@ -140,9 +156,11 @@
         .conversation-item:hover { background: #f1f8f2; border-color: #bcd8c5; }
         .conversation-preview { color: #78867d; }
         .conversation-avatar { align-items: center; background: #d9f36a; border-radius: 50%; color: #24422f; display: flex; font-weight: 800; height: 2.4rem; justify-content: center; overflow: hidden; width: 2.4rem; }
+        .conversation-ad-thumb { border-radius: 4px; height: 1.5rem; object-fit: cover; width: 1.5rem; }
         .thread-header { align-items: center; display: flex; gap: .8rem; }
         .thread-header > div:last-child > div { color: #7c8a81; font-size: .78rem; margin-top: .25rem; }
         .avatar { align-items: center; background: #d9f36a; border-radius: 50%; color: #24422f; display: flex; font-weight: 800; height: 2.6rem; justify-content: center; overflow: hidden; width: 2.6rem; }
+        .chat-ad-thumb { border-radius: 6px; height: 1.8rem; object-fit: cover; width: 1.8rem; }
         .message-list { background: #fbfdfb; display: flex; flex-direction: column; flex-grow: 1; gap: .75rem; min-height: 420px; max-height: 60vh; overflow-y: auto; padding: 1.5rem; }
         .message-bubble { border-radius: 14px; font-size: .9rem; line-height: 1.5; max-width: 78%; padding: .75rem 1rem; }
         .message-bubble.mine { background: #245947; color: white; border-bottom-right-radius: 4px; margin-left: auto; }
