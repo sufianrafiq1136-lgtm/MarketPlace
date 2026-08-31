@@ -76,6 +76,25 @@
                     <div class="mb-3">
                         <label for="images" class="form-label">Replace Photos</label>
                         <input type="file" class="form-control" id="images" name="images[]" accept="image/*" multiple>
+
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>Current photos</strong>
+                                <small class="text-muted">Remove any photo you do not want</small>
+                            </div>
+                            <div class="row g-2" id="existingImagesPreview">
+                                @foreach ($ad->images->sortBy('sort_order') as $image)
+                                    <div class="col-6 col-md-3 existing-image-item" data-image-id="{{ $image->id }}">
+                                        <div class="border rounded overflow-hidden bg-light position-relative">
+                                            <img src="{{ asset('storage/' . $image->image_path) }}" alt="Ad photo" class="w-100" style="height: 140px; object-fit: cover;">
+                                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 delete-existing-image" data-image-id="{{ $image->id }}" aria-label="Delete photo">×</button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div id="deleteImageIdsContainer"></div>
+                        </div>
+
                         <div class="row g-2 mt-3" id="imagesPreview"></div>
                         <div class="text-danger small" id="imagesError"></div>
                     </div>

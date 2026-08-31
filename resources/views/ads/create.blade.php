@@ -173,7 +173,7 @@
                         >
 
                         <small class="text-muted">
-                            You can select multiple photos.
+                            You can select multiple photos. The first photo will be shown as the main cover image.
                         </small>
 
                         <div class="row g-2 mt-3" id="imagesPreview"></div>

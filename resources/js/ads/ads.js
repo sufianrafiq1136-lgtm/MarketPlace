@@ -136,7 +136,7 @@ function displayAds(ads) {
                             <h5 class="card-title mb-0">${title}</h5>
                             <h6 class="text-success mb-0">Rs. ${Number(ad.price).toLocaleString()}</h6>
                         </div>
-                        <p class="card-text mb-0 text-muted">${escapeHtml(ad.description).slice(0, 90)}${String(ad.description || '').length > 90 ? '...' : ''}</p>
+                        
                         <div class="d-flex flex-column gap-2">
                             <p class="mb-0 small text-muted">${escapeHtml(ad.category ? ad.category.name : 'Other')} · ${escapeHtml(ad.city)} · ${escapeHtml(ad.condition)}</p>
                         </div>
@@ -223,36 +223,114 @@ function bindEditAdForm() {
 function bindImagePreview() {
     const input = document.getElementById('images');
     const preview = document.getElementById('imagesPreview');
+    const existingImagesPreview = document.getElementById('existingImagesPreview');
+    const deleteImageIdsContainer = document.getElementById('deleteImageIdsContainer');
 
     if (!input || !preview) {
         return;
     }
 
-    input.addEventListener('change', () => {
+    const fileMap = new Map();
+
+    const rebuildInputFiles = () => {
+        const orderedFiles = Array.from(preview.querySelectorAll('.image-preview-item'))
+            .map((item) => Number(item.dataset.fileIndex))
+            .filter((index) => fileMap.has(index))
+            .map((index) => fileMap.get(index));
+
+        const dataTransfer = new DataTransfer();
+        orderedFiles.forEach((file) => dataTransfer.items.add(file));
+        input.files = dataTransfer.files;
+    };
+
+    const renderSelectedFiles = () => {
         preview.innerHTML = '';
 
-        const files = Array.from(input.files || []);
-        if (!files.length) {
-            return;
-        }
-
-        files.forEach((file) => {
+        Array.from(fileMap.entries()).sort((first, second) => first[0] - second[0]).forEach(([index, file]) => {
             const reader = new FileReader();
 
             reader.onload = (event) => {
-                preview.insertAdjacentHTML(
-                    'beforeend',
-                    `<div class="col-6 col-md-3">
-                        <div class="border rounded overflow-hidden bg-light">
-                            <img src="${event.target.result}" alt="${file.name}" class="w-100" style="height: 140px; object-fit: cover;">
-                        </div>
-                    </div>`
-                );
+                const item = document.createElement('div');
+                item.className = 'col-6 col-md-3 image-preview-item';
+                item.dataset.fileIndex = String(index);
+                item.innerHTML = `
+                    <div class="border rounded overflow-hidden bg-light position-relative">
+                        <img src="${event.target.result}" alt="${escapeHtml(file.name)}" class="w-100" style="height: 140px; object-fit: cover;">
+                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 remove-selected-image" data-file-index="${index}" aria-label="Remove photo">×</button>
+                    </div>
+                `;
+                preview.appendChild(item);
+                registerSelectedFileRemoval();
             };
 
             reader.readAsDataURL(file);
         });
+    };
+
+    const registerSelectedFileRemoval = () => {
+        preview.querySelectorAll('.remove-selected-image').forEach((button) => {
+            button.addEventListener('click', () => {
+                const index = Number(button.dataset.fileIndex);
+                fileMap.delete(index);
+                rebuildInputFiles();
+                renderSelectedFiles();
+                registerSelectedFileRemoval();
+            });
+        });
+    };
+
+    const refreshDeleteImageIds = () => {
+        if (!deleteImageIdsContainer) {
+            return;
+        }
+
+        const selectedIds = Array.from(existingImagesPreview?.querySelectorAll('.existing-image-item.is-marked') || []).map((item) => item.dataset.imageId);
+        deleteImageIdsContainer.innerHTML = '';
+
+        selectedIds.forEach((imageId) => {
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'delete_image_ids[]';
+            hiddenInput.value = imageId;
+            deleteImageIdsContainer.appendChild(hiddenInput);
+        });
+    };
+
+    if (existingImagesPreview) {
+        existingImagesPreview.addEventListener('click', (event) => {
+            const button = event.target.closest('.delete-existing-image');
+            if (!button) return;
+
+            const item = button.closest('.existing-image-item');
+            if (!item) return;
+
+            const isMarked = item.classList.toggle('is-marked');
+            item.style.opacity = isMarked ? '0.4' : '1';
+            item.style.filter = isMarked ? 'grayscale(1)' : 'none';
+            button.textContent = isMarked ? '↺' : '×';
+            button.setAttribute('title', isMarked ? 'Restore photo' : 'Delete photo');
+            button.dataset.action = isMarked ? 'restore' : 'delete';
+
+            refreshDeleteImageIds();
+        });
+    }
+
+    input.addEventListener('change', () => {
+        fileMap.clear();
+
+        Array.from(input.files || []).forEach((file, index) => {
+            fileMap.set(index, file);
+        });
+
+        renderSelectedFiles();
+        registerSelectedFileRemoval();
     });
+
+    if (input.files && input.files.length) {
+        Array.from(input.files).forEach((file, index) => fileMap.set(index, file));
+        renderSelectedFiles();
+        registerSelectedFileRemoval();
+    }
 }
 
 async function submitAdForm(event) {
@@ -264,19 +342,23 @@ async function submitEditForm(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const adId = form.dataset.adId;
-    await submitAdRequest(`/ads/${adId}`, 'POST', 'Updating...', 'Update Ad', form);
+    await submitAdRequest(`/ads/${adId}`, 'PUT', 'Updating...', 'Update Ad', form);
 }
 
 async function submitAdRequest(url, method, loadingLabel, idleLabel, form) {
     const formData = new FormData(form);
     const submitBtn = document.getElementById('submitAdBtn');
 
+    if (method === 'PUT') {
+        formData.append('_method', 'PUT');
+    }
+
     clearErrors();
     setButtonLoading(submitBtn, true, loadingLabel);
 
     try {
         const response = await fetch(url, {
-            method,
+            method: 'POST',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',

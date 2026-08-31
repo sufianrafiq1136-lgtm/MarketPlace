@@ -26,7 +26,7 @@
                                     Report
                                 </button>
                             @endauth
-                            @if(auth()->user()?->is_admin)
+                            @if(auth()->id() === $ad->user_id || auth()->user()?->is_admin)
                                 <a href="{{ route('ads.edit', $ad) }}" class="btn btn-primary">Edit</a>
                             @endif
                             <a href="{{ route('ads.index') }}" class="btn btn-outline-secondary">Back</a>

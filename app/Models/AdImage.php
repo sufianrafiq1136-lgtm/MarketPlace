@@ -9,6 +9,7 @@ class AdImage extends Model
     protected $fillable = [
         'ad_id',
         'image_path',
+        'sort_order',
     ];
 
     public function ad()

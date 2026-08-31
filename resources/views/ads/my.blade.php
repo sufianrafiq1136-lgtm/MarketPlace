@@ -19,7 +19,7 @@
 
                     <div class="row g-4">
                         <div class="col-12 col-xl-8">
-                            <div class="row g-4" id="adsContainer" data-endpoint="{{ route('ads.my.data') }}" data-can-manage="{{ auth()->user()?->is_admin ? '1' : '0' }}">
+                            <div class="row g-4" id="adsContainer" data-endpoint="{{ route('ads.my.data') }}" data-can-manage="1">
                                 <div class="col-12 text-sm text-gray-500">
                                     Loading ads...
                                 </div>

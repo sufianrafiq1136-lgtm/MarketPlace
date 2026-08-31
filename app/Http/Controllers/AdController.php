@@ -20,6 +20,11 @@ class AdController extends Controller
         abort_unless(Auth::user()?->is_admin, 403);
     }
 
+    private function ensureOwnerOrAdmin(Ad $ad): void
+    {
+        abort_unless(Auth::id() === $ad->user_id || Auth::user()?->is_admin, 403);
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -98,9 +103,12 @@ class AdController extends Controller
         ]);
 
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
+            foreach ($request->file('images') as $index => $image) {
                 $path = $image->store('ad_images', 'public');
-                $ad->images()->create(['image_path' => $path]);
+                $ad->images()->create([
+                    'image_path' => $path,
+                    'sort_order' => $index,
+                ]);
             }
         }
 
@@ -134,7 +142,7 @@ class AdController extends Controller
 
     public function edit(Ad $ad)
     {
-        $this->ensureAdmin();
+        $this->ensureOwnerOrAdmin($ad);
 
         return view('ads.edit', [
             'ad' => $ad->load('images'),
@@ -144,7 +152,7 @@ class AdController extends Controller
 
     public function update(Request $request, Ad $ad): JsonResponse
     {
-        $this->ensureAdmin();
+        $this->ensureOwnerOrAdmin($ad);
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -155,6 +163,8 @@ class AdController extends Controller
             'city' => ['required', 'string', 'max:255'],
             'status' => ['required', Rule::in(['available', 'sold', 'pending'])],
             'images.*' => ['nullable', 'image', 'max:4096'],
+            'delete_image_ids' => ['nullable', 'array'],
+            'delete_image_ids.*' => ['integer'],
         ]);
 
         $ad->update([
@@ -168,16 +178,34 @@ class AdController extends Controller
             'status' => $validated['status'],
         ]);
 
-        if ($request->hasFile('images')) {
-            foreach ($ad->images as $existingImage) {
-                Storage::disk('public')->delete($existingImage->image_path);
-                $existingImage->delete();
-            }
+        $deleteImageIds = array_map('intval', $request->input('delete_image_ids', []));
+        if (!empty($deleteImageIds)) {
+            $imagesToDelete = $ad->images()->whereIn('id', $deleteImageIds)->get();
 
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('ad_images', 'public');
-                $ad->images()->create(['image_path' => $path]);
+            foreach ($imagesToDelete as $image) {
+                Storage::disk('public')->delete($image->image_path);
+                $image->delete();
             }
+        }
+
+        $remainingImages = $ad->fresh()->images()->orderBy('sort_order')->orderBy('id')->get();
+        foreach ($remainingImages as $index => $image) {
+            $image->update(['sort_order' => $index]);
+        }
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $index => $image) {
+                $path = $image->store('ad_images', 'public');
+                $ad->images()->create([
+                    'image_path' => $path,
+                    'sort_order' => $remainingImages->count() + $index,
+                ]);
+            }
+        }
+
+        $orderedImages = $ad->fresh()->images()->orderBy('sort_order')->orderBy('id')->get();
+        foreach ($orderedImages as $index => $image) {
+            $image->update(['sort_order' => $index]);
         }
 
         return response()->json([
@@ -189,7 +217,7 @@ class AdController extends Controller
 
     public function destroy(Ad $ad): JsonResponse
     {
-        $this->ensureAdmin();
+        $this->ensureOwnerOrAdmin($ad);
 
         foreach ($ad->images as $image) {
             Storage::disk('public')->delete($image->image_path);

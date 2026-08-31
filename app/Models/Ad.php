@@ -27,7 +27,7 @@ class Ad extends Model
     }
     public function images()
     {
-        return $this->hasMany(AdImage::class);
+        return $this->hasMany(AdImage::class)->orderBy('sort_order')->orderBy('id');
     }
 
     public function favorites()
