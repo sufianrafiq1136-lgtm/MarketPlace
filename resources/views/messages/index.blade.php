@@ -26,18 +26,28 @@
                                     $partnerId = $conversation->sender_id === auth()->id() ? $conversation->receiver_id : $conversation->sender_id;
                                     $partner = $conversation->sender_id === auth()->id() ? $conversation->receiver : $conversation->sender;
                                     $isActive = $selectedAd?->id === $conversation->ad_id && (int) $selectedUserId === (int) $partnerId;
+                                    $partnerImage = $partner?->profile_image ? asset('storage/' . $partner->profile_image) : null;
                                 @endphp
                                 <a href="{{ route('messages.index', ['ad' => $conversation->ad_id, 'user' => $partnerId]) }}" class="text-decoration-none text-reset">
                                     <div class="conversation-item {{ $isActive ? 'active' : '' }}">
                                         <div class="d-flex justify-content-between gap-3">
-                                            <div>
+                                            <div class="d-flex align-items-start gap-2">
+                                                <div class="conversation-avatar flex-shrink-0">
+                                                    @if ($partnerImage)
+                                                        <img src="{{ $partnerImage }}" alt="{{ $partner?->name ?? 'User' }}" class="w-100 h-100 rounded-circle object-fit-cover">
+                                                    @else
+                                                        {{ strtoupper(substr($partner?->name ?? 'U', 0, 1)) }}
+                                                    @endif
+                                                </div>
+                                                <div class="min-w-0">
                                                 <div class="d-flex align-items-center gap-2">
                                                     <div class="fw-semibold">{{ $partner?->name ?? 'Unknown user' }}</div>
                                                     @if ($conversation->has_unread && ! $isActive)
                                                         <span class="unread-dot" aria-label="Unread chat"></span>
                                                     @endif
                                                 </div>
-                                                    <div class="text-muted small text-truncate">{{ $conversation->ad?->title }}</div>
+                                                <div class="text-muted small text-truncate">{{ $conversation->ad?->title }}</div>
+                                            </div>
                                             </div>
                                             <div class="text-muted small text-end">{{ $conversation->created_at?->diffForHumans() }}</div>
                                         </div>
@@ -58,9 +68,16 @@
                                 $selectedPartner = $selectedConversation->first()?->sender_id === auth()->id()
                                     ? $selectedConversation->first()?->receiver
                                     : ($selectedConversation->first()?->sender ?? $selectedAd->user);
+                                $selectedPartnerImage = $selectedPartner?->profile_image ? asset('storage/' . $selectedPartner->profile_image) : null;
                             @endphp
                             <div class="thread-header">
-                                <div class="avatar">{{ strtoupper(substr($selectedPartner?->name ?? 'C', 0, 1)) }}</div>
+                                <div class="avatar">
+                                    @if ($selectedPartnerImage)
+                                        <img src="{{ $selectedPartnerImage }}" alt="{{ $selectedPartner?->name ?? 'User' }}" class="w-100 h-100 rounded-circle object-fit-cover">
+                                    @else
+                                        {{ strtoupper(substr($selectedPartner?->name ?? 'C', 0, 1)) }}
+                                    @endif
+                                </div>
                                 <div>
                                     <h2>{{ $selectedPartner?->name ?? 'Chat' }}</h2>
                                     <div>{{ $selectedAd->title }}</div>
@@ -122,9 +139,10 @@
         .conversation-item.active { background: #eef7ff; border-color: #93c5fd; }
         .conversation-item:hover { background: #f1f8f2; border-color: #bcd8c5; }
         .conversation-preview { color: #78867d; }
+        .conversation-avatar { align-items: center; background: #d9f36a; border-radius: 50%; color: #24422f; display: flex; font-weight: 800; height: 2.4rem; justify-content: center; overflow: hidden; width: 2.4rem; }
         .thread-header { align-items: center; display: flex; gap: .8rem; }
         .thread-header > div:last-child > div { color: #7c8a81; font-size: .78rem; margin-top: .25rem; }
-        .avatar { align-items: center; background: #d9f36a; border-radius: 50%; color: #24422f; display: flex; font-weight: 800; height: 2.6rem; justify-content: center; width: 2.6rem; }
+        .avatar { align-items: center; background: #d9f36a; border-radius: 50%; color: #24422f; display: flex; font-weight: 800; height: 2.6rem; justify-content: center; overflow: hidden; width: 2.6rem; }
         .message-list { background: #fbfdfb; display: flex; flex-direction: column; flex-grow: 1; gap: .75rem; min-height: 420px; max-height: 60vh; overflow-y: auto; padding: 1.5rem; }
         .message-bubble { border-radius: 14px; font-size: .9rem; line-height: 1.5; max-width: 78%; padding: .75rem 1rem; }
         .message-bubble.mine { background: #245947; color: white; border-bottom-right-radius: 4px; margin-left: auto; }
