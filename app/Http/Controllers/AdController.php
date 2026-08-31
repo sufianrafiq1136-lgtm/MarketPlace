@@ -112,7 +112,7 @@ class AdController extends Controller
             }
         }
 
-        Mail::to(Auth::user()->email)->send(
+        Mail::to(Auth::user()->email)->queue(
             new AdCreatedMail($ad->load('category', 'user'))
         );
 

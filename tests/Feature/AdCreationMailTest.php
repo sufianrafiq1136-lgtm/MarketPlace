@@ -24,7 +24,7 @@ test('creating an ad sends the ad-created email to the owner', function () {
         'status' => 'available',
     ])->assertCreated();
 
-    Mail::assertSent(AdCreatedMail::class, function (AdCreatedMail $mail) use ($user) {
+    Mail::assertQueued(AdCreatedMail::class, function (AdCreatedMail $mail) use ($user) {
         return $mail->hasTo($user->email);
     });
 });
