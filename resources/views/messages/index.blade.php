@@ -57,7 +57,6 @@
                                                 </div>
                                             </div>
                                             </div>
-                                            <div class="text-muted small text-end">{{ $conversation->created_at?->diffForHumans() }}</div>
                                         </div>
                                         <div class="small mt-2 text-truncate conversation-preview">{{ $conversation->message }}</div>
                                     </div>
@@ -101,8 +100,18 @@
                             </div>
 
                             <div id="message-list" class="message-list">
+                                @php $messageDay = null; @endphp
                                 @foreach ($selectedConversation as $message)
                                     @php $isMine = $message->sender_id === auth()->id(); @endphp
+                                    @php
+                                        $currentMessageDay = $message->created_at?->format('Y-m-d');
+                                    @endphp
+                                    @if ($currentMessageDay !== $messageDay)
+                                        @php $messageDay = $currentMessageDay; @endphp
+                                        <div class="message-date-separator">
+                                            <span>{{ $message->created_at?->format('M d, Y') }}</span>
+                                        </div>
+                                    @endif
                                     <div class="message-bubble {{ $isMine ? 'mine' : 'theirs' }}">
                                         <div class="small fw-semibold mb-1">{{ $isMine ? 'You' : $message->sender?->name }}</div>
                                         <div>{{ $message->message }}</div>
@@ -162,6 +171,8 @@
         .avatar { align-items: center; background: #d9f36a; border-radius: 50%; color: #24422f; display: flex; font-weight: 800; height: 2.6rem; justify-content: center; overflow: hidden; width: 2.6rem; }
         .chat-ad-thumb { border-radius: 6px; height: 1.8rem; object-fit: cover; width: 1.8rem; }
         .message-list { background: #fbfdfb; display: flex; flex-direction: column; flex-grow: 1; gap: .75rem; min-height: 420px; max-height: 60vh; overflow-y: auto; padding: 1.5rem; }
+        .message-date-separator { display: flex; justify-content: center; margin: .5rem 0; }
+        .message-date-separator span { background: #edf7ef; border: 1px solid #cfe2d6; border-radius: 999px; color: #4a6454; font-size: .72rem; font-weight: 700; letter-spacing: .02em; padding: .35rem .75rem; }
         .message-bubble { border-radius: 14px; font-size: .9rem; line-height: 1.5; max-width: 78%; padding: .75rem 1rem; }
         .message-bubble.mine { background: #245947; color: white; border-bottom-right-radius: 4px; margin-left: auto; }
         .message-bubble.theirs { background: #eaf1ec; border-bottom-left-radius: 4px; margin-right: auto; }
