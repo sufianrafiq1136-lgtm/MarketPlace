@@ -1,59 +1,421 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Marketplace Project
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A modern marketplace platform that allows users to browse products, manage listings, place orders, and interact with sellers through a secure and user-friendly interface.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+* User registration and authentication
+* User profiles
+* Product listings
+* Product categories
+* Product search and filtering
+* Product details and images
+* Shopping cart
+* Checkout and order management
+* Seller/product management
+* Order history
+* Real-time notifications
+* Real-time features using Laravel Reverb
+* Responsive design
+* Secure API and backend architecture
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tech Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Backend
 
-## Learning Laravel
+* Laravel
+* PHP
+* MySQL
+* Laravel Reverb
+* Laravel Sanctum / Authentication
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Frontend
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+* Blade / Vue / React
+* JavaScript
+* Tailwind CSS
 
-## Laravel Sponsors
+> Update the frontend technologies above according to the technologies used in the project.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Requirements
 
-### Premium Partners
+Before running the project, make sure you have:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+* PHP 8.x or higher
+* Composer
+* MySQL
+* Node.js and npm
+* Laravel
+* A configured `.env` file
 
-## Contributing
+## Installation
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 1. Clone the repository
 
-## Code of Conduct
+```bash
+git clone <https://github.com/sufianrafiq1136-lgtm/MarketPlace>
+cd <project-directory>
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 2. Install PHP dependencies
 
-## Security Vulnerabilities
+```bash
+composer install
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 3. Install frontend dependencies
+
+```bash
+npm install
+```
+
+### 4. Configure environment
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Generate the application key:
+
+```bash
+php artisan key:generate
+```
+
+Update your `.env` file with your database and application configuration.
+
+Example:
+
+```env
+APP_NAME=Marketplace
+APP_ENV=local
+APP_DEBUG=true
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=marketplace
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+### 5. Run migrations
+
+```bash
+php artisan migrate
+```
+
+If the project includes seeders:
+
+```bash
+php artisan db:seed
+```
+
+Or run both together:
+
+```bash
+php artisan migrate --seed
+```
+
+### 6. Create storage link
+
+```bash
+php artisan storage:link
+```
+
+### 7. Build frontend assets
+
+For development:
+
+```bash
+npm run dev
+```
+
+For production:
+
+```bash
+npm run build
+```
+
+## Running the Project
+
+Start the Laravel development server:
+
+```bash
+php artisan serve
+```
+
+The application will normally be available at:
+
+```text
+http://127.0.0.1:8000
+```
+
+### Running Laravel Reverb
+
+If the project uses Laravel Reverb for real-time functionality, start the Reverb server:
+
+```bash
+php artisan reverb:start
+```
+
+For debugging:
+
+```bash
+php artisan reverb:start --debug
+```
+
+You may need to run the frontend development server and Reverb in separate terminals:
+
+```bash
+npm run dev
+```
+
+```bash
+php artisan reverb:start
+```
+
+## Queue Worker
+
+If the project uses queued jobs, run the queue worker:
+
+```bash
+php artisan queue:work
+```
+
+For local development, you may need three terminals:
+
+**Terminal 1 — Laravel**
+
+```bash
+php artisan serve
+```
+
+**Terminal 2 — Frontend**
+
+```bash
+npm run dev
+```
+
+**Terminal 3 — Reverb**
+
+```bash
+php artisan reverb:start
+```
+
+If queues are required:
+
+**Terminal 4 — Queue**
+
+```bash
+php artisan queue:work
+```
+
+## Database
+
+The marketplace database contains the core entities required for managing the platform, such as:
+
+* Users
+* Products
+* Categories
+* Sellers
+* Orders
+* Order Items
+* Cart Items
+* Payments
+* Notifications
+
+The exact database structure depends on the current implementation.
+
+## Environment Configuration
+
+Important environment variables may include:
+
+```env
+APP_URL=http://127.0.0.1:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=marketplace
+DB_USERNAME=root
+DB_PASSWORD=
+
+BROADCAST_CONNECTION=reverb
+
+REVERB_APP_ID=
+REVERB_APP_KEY=
+REVERB_APP_SECRET=
+REVERB_HOST=127.0.0.1
+REVERB_PORT=8080
+REVERB_SCHEME=http
+```
+
+Never commit sensitive credentials or production secrets to the repository.
+
+## Testing
+
+Run the application's test suite with:
+
+```bash
+php artisan test
+```
+
+You can also run:
+
+```bash
+./vendor/bin/phpunit
+```
+
+## Code Formatting
+
+Before committing changes, make sure the code follows the project's coding standards.
+
+For Laravel projects using Laravel Pint:
+
+```bash
+./vendor/bin/pint
+```
+
+## Useful Artisan Commands
+
+Clear application caches:
+
+```bash
+php artisan optimize:clear
+```
+
+Run migrations:
+
+```bash
+php artisan migrate
+```
+
+Rollback migrations:
+
+```bash
+php artisan migrate:rollback
+```
+
+Create a new migration:
+
+```bash
+php artisan make:migration create_example_table
+```
+
+Create a model:
+
+```bash
+php artisan make:model Example -m
+```
+
+List routes:
+
+```bash
+php artisan route:list
+```
+
+## Project Structure
+
+```text
+marketplace/
+├── app/
+│   ├── Http/
+│   ├── Models/
+│   ├── Events/
+│   └── ...
+├── bootstrap/
+├── config/
+├── database/
+│   ├── migrations/
+│   └── seeders/
+├── public/
+├── resources/
+│   ├── css/
+│   ├── js/
+│   └── views/
+├── routes/
+│   ├── web.php
+│   ├── api.php
+│   └── channels.php
+├── storage/
+├── tests/
+├── .env.example
+├── composer.json
+├── package.json
+└── README.md
+```
+
+## Git Workflow
+
+Create a feature branch before making changes:
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+After making your changes:
+
+```bash
+git add .
+git commit -m "Add your feature"
+git push origin feature/your-feature-name
+```
+
+Create a pull request for review.
+
+## Troubleshooting
+
+### Clear Laravel cache
+
+```bash
+php artisan optimize:clear
+```
+
+### Rebuild frontend dependencies
+
+```bash
+rm -rf node_modules
+npm install
+npm run dev
+```
+
+### Recreate the database
+
+> **Warning:** This deletes existing database data.
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+### Reverb is not connecting
+
+Make sure Reverb is running:
+
+```bash
+php artisan reverb:start
+```
+
+Check that the Reverb variables in `.env` match the frontend configuration and restart your development servers after changing environment variables.
+
+## Security
+
+If you discover a security vulnerability, please report it privately to the project maintainers rather than opening a public issue.
+
+Do not commit:
+
+* `.env` files
+* API keys
+* Passwords
+* Database credentials
+* Private certificates
+* Production secrets
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is proprietary unless otherwise specified by the project owner.
+
+## Contributors
+
+Developed and maintained by the Marketplace Project Team.
