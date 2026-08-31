@@ -25,7 +25,16 @@ class MessageController extends Controller
             ->latest()
             ->get()
             ->groupBy(fn (Message $message) => $message->ad_id.'-'.min($message->sender_id, $message->receiver_id).'-'.max($message->sender_id, $message->receiver_id))
-            ->map(fn ($messages) => $messages->sortByDesc('created_at')->first())
+            ->map(function ($messages) use ($user) {
+                $latestMessage = $messages->sortByDesc('created_at')->first();
+                $hasUnread = $messages->contains(function (Message $message) use ($user) {
+                    return (int) $message->receiver_id === (int) $user->id && ! $message->is_read;
+                });
+
+                $latestMessage->setAttribute('has_unread', $hasUnread);
+
+                return $latestMessage;
+            })
             ->values();
 
         $selectedConversation = null;
@@ -64,26 +73,6 @@ class MessageController extends Controller
                 ->where('receiver_id', $user->id)
                 ->where('sender_id', $selectedUserId)
                 ->update(['is_read' => true]);
-        } elseif ($conversations->isNotEmpty()) {
-            $firstConversation = $conversations->first();
-            $selectedAd = $firstConversation->ad;
-            $selectedUserId = $firstConversation->sender_id === $user->id
-                ? $firstConversation->receiver_id
-                : $firstConversation->sender_id;
-
-            $selectedConversation = Message::with(['sender', 'receiver', 'ad'])
-                ->where('ad_id', $selectedAd->id)
-                ->where(function ($query) use ($user, $selectedUserId) {
-                    $query->where(function ($inner) use ($user, $selectedUserId) {
-                        $inner->where('sender_id', $user->id)
-                            ->where('receiver_id', $selectedUserId);
-                    })->orWhere(function ($inner) use ($user, $selectedUserId) {
-                        $inner->where('sender_id', $selectedUserId)
-                            ->where('receiver_id', $user->id);
-                    });
-                })
-                ->latest()
-                ->get();
         }
 
         $unreadMessages = Message::where('receiver_id', $user->id)

@@ -31,7 +31,12 @@
                                     <div class="conversation-item {{ $isActive ? 'active' : '' }}">
                                         <div class="d-flex justify-content-between gap-3">
                                             <div>
-                                                <div class="fw-semibold">{{ $partner?->name ?? 'Unknown user' }}</div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="fw-semibold">{{ $partner?->name ?? 'Unknown user' }}</div>
+                                                    @if ($conversation->has_unread && ! $isActive)
+                                                        <span class="unread-dot" aria-label="Unread chat"></span>
+                                                    @endif
+                                                </div>
                                                     <div class="text-muted small text-truncate">{{ $conversation->ad?->title }}</div>
                                             </div>
                                             <div class="text-muted small text-end">{{ $conversation->created_at?->diffForHumans() }}</div>
@@ -112,8 +117,10 @@
         .chat-panel-header h2, .thread-header h2 { font-size: 1.05rem; font-weight: 700; margin: 0; }
         .chat-panel-header p { color: #849188; font-size: .78rem; margin: .3rem 0 0; }
         .unread-count { background: #eef7d5; border-radius: 999px; color: #456221; font-size: .72rem; padding: .35rem .6rem; }
+        .unread-dot { background: #2563eb; border-radius: 999px; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15); display: inline-block; height: .7rem; width: .7rem; }
         .conversation-item { border: 1px solid transparent; border-radius: 5px; padding: .85rem; }
-        .conversation-item.active, .conversation-item:hover { background: #f1f8f2; border-color: #bcd8c5; }
+        .conversation-item.active { background: #eef7ff; border-color: #93c5fd; }
+        .conversation-item:hover { background: #f1f8f2; border-color: #bcd8c5; }
         .conversation-preview { color: #78867d; }
         .thread-header { align-items: center; display: flex; gap: .8rem; }
         .thread-header > div:last-child > div { color: #7c8a81; font-size: .78rem; margin-top: .25rem; }
